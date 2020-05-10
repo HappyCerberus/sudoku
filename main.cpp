@@ -8,82 +8,26 @@
 // - can generate from a template
 // - support all the variants of Sudoku
 
-// Basic Solver:
-// - backtracking solver
-// - make a guess, check constrains
-//   - if its wrong - go back, remove the guess
-//   - if its correct, we just continue
+// [DONE] Basic Solver - backtracking
+
 
 #include <vector>
 
-struct Sudoku {
-    Sudoku() : data(9, std::vector<int>(9, 0)) {}
+#include "Sudoku.h"
 
-    Sudoku(int a1, int a2, int b1, int b2) {
-        data.resize(2);
-        data[0].resize(2);
-        data[1].resize(2);
-        data[0][0] = a1;
-        data[0][1] = a2;
-        data[1][0] = b1;
-        data[1][1] = b2;
-    }
+// Basic Sudoku 9x9
+// - rows
+// - columns
+// - blocks 3x3
 
-    std::vector<std::vector<int>> data;
-};
-
-// Basic sudoku
-// rows - all_distinct
-// columns - all_distinct
-// squares 3x3 - all_distinct
-bool check_puzzle(const Sudoku &sudoku) {
-    // check rows
-    for (int i = 0; i < sudoku.data.size(); i++) {
-        std::vector<bool> present(sudoku.data[i].size(), false);
-        for (int j = 0; j < sudoku.data[i].size(); j++) {
-            if (sudoku.data[i][j] == 0)
-                continue;
-            if (present[sudoku.data[i][j] - 1]) {
-                return false;
-            }
-            present[sudoku.data[i][j] - 1] = true;
-        }
-    }
-    // check columns
-    for (int j = 0; j < sudoku.data[0].size(); j++) {
-        std::vector<bool> present(sudoku.data[0].size(), false);
-        for (int i = 0; i < sudoku.data.size(); i++) {
-            if (sudoku.data[i][j] == 0)
-                continue;
-            if (present[sudoku.data[i][j] - 1]) {
-                return false;
-            }
-            present[sudoku.data[i][j] - 1] = true;
-        }
-    }
-    // check blocks
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            std::vector<bool> present(sudoku.data[0].size(), false);
-            for (int x = i * 3; x < (i + 1) * 3; x++) {
-                for (int y = j * 3; y < (j + 1) * 3; y++) {
-                    if (sudoku.data[x][y] == 0)
-                        continue;
-                    if (present[sudoku.data[x][y] - 1]) {
-                        return false;
-                    }
-                    present[sudoku.data[x][y] - 1] = true;
-                }
-            }
-        }
-    }
-    return true;
-}
+// Diagonal
+// - basic sudoku
+// - 2 diagonals
 
 std::pair<int, int> find_empty(const Sudoku &sudoku) {
-    for (int i = 0; i < sudoku.data.size(); i++) {
-        for (int j = 0; j < sudoku.data[i].size(); j++) {
-            if (sudoku.data[i][j] == 0)
+    for (int i = 0; i < sudoku.data().size(); i++) {
+        for (int j = 0; j < sudoku.data()[i].size(); j++) {
+            if (sudoku.data()[i][j] == 0)
                 return std::make_pair(i, j);
         }
     }
@@ -91,9 +35,9 @@ std::pair<int, int> find_empty(const Sudoku &sudoku) {
 }
 
 bool puzzle_filled(const Sudoku &sudoku) {
-    for (int i = 0; i < sudoku.data.size(); i++) {
-        for (int j = 0; j < sudoku.data[i].size(); j++) {
-            if (sudoku.data[i][j] == 0)
+    for (int i = 0; i < sudoku.data().size(); i++) {
+        for (int j = 0; j < sudoku.data()[i].size(); j++) {
+            if (sudoku.data()[i][j] == 0)
                 return false;
         }
     }
@@ -102,40 +46,36 @@ bool puzzle_filled(const Sudoku &sudoku) {
 }
 
 bool solve_recursive(Sudoku &sudoku) {
-    if (!check_puzzle(sudoku)) {
+    if (!sudoku.CheckPuzzle()) {
         return false;
     }
-    if (puzzle_filled(sudoku) && check_puzzle(sudoku)) {
+    if (puzzle_filled(sudoku) && sudoku.CheckPuzzle()) {
         return true;
     }
 
     auto next = find_empty(sudoku);
     for (int k = 1; k <= 9; k++) {
-        sudoku.data[next.first][next.second] = k;
+        sudoku.data()[next.first][next.second] = k;
         if (solve_recursive(sudoku))
             return true;
     }
-    sudoku.data[next.first][next.second] = 0;
+    sudoku.data()[next.first][next.second] = 0;
     return false;
 }
 
-// Version 0 is done
-// We can solve sudokus.
-// Everything is very much hardcoded:
-// - un-hard-code things
+// Version 1 is done
+// We can solve sudokus & diagonal sudokus and maybe 16x16 sudokus?
+// Next steps:
 // - stack based non-recursive solution
 // - write tests
-// - ostream operator
-// - we need a cleanup of the check routine
-//  - iterator over a block
-//  - we could have objects that check the state of a block
-//    - for each block we would have one object
-//    - they point at the correct elements in the arrays
+// - fix the access to the elements of the puzzle Get(int x, int y); operator[]
+// - lookup data format for sudokus
+// - encapsulate the solver a class
+// - design a new puzzle data representation that is suitable for human solving
 
 
 int main() {
-    Sudoku test{};
-    test.data = std::vector<std::vector<int>>{
+    auto data = std::vector<std::vector<int>>{
             std::vector<int>{0, 6, 0, 8, 0, 0, 0, 0, 9},
             std::vector<int>{0, 1, 0, 0, 9, 0, 7, 0, 0},
             std::vector<int>{0, 3, 2, 0, 0, 0, 0, 6, 0},
@@ -147,18 +87,55 @@ int main() {
             std::vector<int>{5, 0, 0, 0, 0, 4, 0, 7, 0},
     };
 
+    auto data2 = std::vector<std::vector<int>>{
+            std::vector<int>{0, 0, 5, 0, 7, 0, 3, 0, 0},
+            std::vector<int>{8, 0, 0, 0, 5, 0, 0, 0, 4},
+            std::vector<int>{0, 9, 0, 6, 0, 4, 0, 8, 0},
+            std::vector<int>{0, 0, 9, 0, 0, 0, 6, 0, 0},
+            std::vector<int>{3, 0, 0, 0, 0, 0, 0, 0, 8},
+            std::vector<int>{0, 0, 1, 0, 0, 0, 9, 0, 0},
+            std::vector<int>{0, 7, 0, 4, 0, 2, 0, 3, 0},
+            std::vector<int>{6, 0, 0, 0, 9, 0, 0, 0, 2},
+            std::vector<int>{0, 0, 2, 0, 8, 0, 4, 0, 0},
+    };
 
-    //Sudoku sudoku{};
+    auto data3 = std::vector<std::vector<int>>{
+            std::vector<int>{0, 0, 16, 0, 0, 0, 0, 0, 15, 14, 0, 2, 0, 6, 0, 13},
+            std::vector<int>{0, 0, 0, 0, 3, 2, 0, 0, 5, 0, 0, 0, 0, 0, 10, 14},
+            std::vector<int>{0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 16, 6, 0, 12, 3, 0},
+            std::vector<int>{10, 0, 0, 0, 0, 0, 0, 14, 12, 7, 3, 0, 5, 0, 1, 0},
+            std::vector<int>{0, 0, 0, 5, 6, 15, 2, 0, 3, 16, 0, 8, 0, 9, 0, 0},
+            std::vector<int>{12, 7, 3, 8, 10, 0, 1, 16, 0, 0, 0, 0, 2, 11, 0, 0},
+            std::vector<int>{0, 9, 0, 0, 0, 0, 13, 11, 2, 0, 0, 15, 0, 0, 0, 10},
+            std::vector<int>{0, 6, 0, 0, 0, 5, 0, 0, 0, 0, 0, 1, 0, 4, 14, 0},
+            std::vector<int>{0, 0, 0, 2, 0, 0, 0, 3, 14, 0, 0, 0, 7, 0, 0, 0},
+            std::vector<int>{0, 0, 0, 3, 0, 16, 0, 8, 0, 1, 6, 0, 0, 0, 15, 0},
+            std::vector<int>{6, 0, 0, 0, 14, 0, 9, 0, 0, 0, 4, 0, 0, 16, 0, 0},
+            std::vector<int>{0, 0, 8, 0, 0, 7, 0, 10, 0, 2, 0, 0, 0, 14, 11, 1},
+            std::vector<int>{8, 0, 0, 0, 13, 10, 7, 0, 0, 0, 0, 0, 16, 0, 0, 0},
+            std::vector<int>{0, 0, 0, 0, 4, 0, 0, 1, 7, 10, 13, 0, 9, 0, 8, 11},
+            std::vector<int>{9, 0, 1, 0, 2, 0, 12, 0, 0, 5, 0, 0, 0, 0, 4, 0},
+            std::vector<int>{0, 0, 14, 0, 0, 0, 11, 15, 0, 0, 0, 4, 10, 0, 0, 5},
+    };
+
+    Sudoku test{data};
+    Sudoku test2{data2, DIAGONAL};
+    Sudoku test3(data3);
+
     if (!solve_recursive(test)) {
         std::cout << "There is something very wrong!" << std::endl;
     }
-
-    for (int i = 0; i < test.data.size(); i++) {
-        for (int j = 0; j < test.data[i].size(); j++) {
-            std::cout << test.data[i][j] << " ";
-        }
-        std::cout << std::endl;
+    if (!solve_recursive(test2)) {
+        std::cout << "There is something very wrong!" << std::endl;
+    }
+    if (!solve_recursive(test3)) {
+        std::cout << "There is something very wrong!" << std::endl;
     }
 
+    std::cout << test << std::endl;
+    std::cout << "-----------------------------" << std::endl;
+    std::cout << test2 << std::endl;
+    std::cout << "-----------------------------" << std::endl;
+    std::cout << test3 << std::endl;
     return 0;
 }
