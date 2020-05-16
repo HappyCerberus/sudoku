@@ -2,17 +2,24 @@
 
 #include "BlockChecker.h"
 
-BlockChecker::BlockChecker(const std::vector<int *> &elements) : elem_(elements) {}
+BlockChecker::BlockChecker(const SudokuBlockType &elements) : elem_(elements) {}
 
 bool BlockChecker::Check() const {
     std::vector<bool> present(elem_.size(), false);
-    for (int i = 0; i < elem_.size(); i++) {
-        if (*(elem_[i]) == 0)
+    for (size_t i = 0; i < elem_.size(); i++) {
+        if (!elem_[i]->IsSet())
             continue;
-        if (present[*(elem_[i]) - 1]) {
+        if (present[elem_[i]->Value() - 1]) {
             return false;
         }
-        present[*(elem_[i]) - 1] = true;
+        present[elem_[i]->Value() - 1] = true;
     }
     return true;
+}
+
+void BlockChecker::Prune(unsigned int number) {
+    for (size_t i = 0; i < elem_.size(); i++) {
+        if (elem_[i]->IsSet()) continue;
+        elem_[i]->Remove(number);
+    }
 }

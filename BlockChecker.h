@@ -3,15 +3,21 @@
 #define SUDOKU_BLOCKCHECKER_H
 
 #include <vector>
+#include <cstdint>
+#include "SudokuSquare.h"
+
+typedef std::vector<SquareType *> SudokuBlockType;
 
 class BlockChecker {
 public:
-    BlockChecker(const std::vector<int *> &elements);
+    BlockChecker(const SudokuBlockType &elements);
 
     bool Check() const;
 
+    void Prune(unsigned number);
+
 private:
-    std::vector<int *> elem_;
+    SudokuBlockType elem_;
 };
 
 

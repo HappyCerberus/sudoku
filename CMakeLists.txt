@@ -3,5 +3,5 @@ cmake_minimum_required(VERSION 3.10)
 project(sudoku)
 
 set(CMAKE_CXX_STANDARD 17)
-
-add_executable(sudoku Sudoku.cpp Sudoku.h BlockChecker.cpp BlockChecker.h main.cpp)
+set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra")
+add_executable(sudoku Sudoku.cpp Sudoku.h SudokuSquare.h SudokuSquare.cpp BlockChecker.cpp BlockChecker.h main.cpp)
