@@ -32,11 +32,20 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
 endif ()
 
 set(CMAKE_CXX_STANDARD 17)
+#set(CMAKE_CXX_FLAGS "-O0 -Wall -Wextra -ggdb3")
 set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra")
 
 add_executable(SudokuSquareTest SudokuSquareTest.cpp SudokuSquare.h SudokuSquare.cpp)
 target_link_libraries(SudokuSquareTest gtest_main)
 add_test(NAME SudokuSquareTest COMMAND SudokuSquareTest)
 
+add_executable(BlockCheckerTest BlockCheckerTest.cpp BlockChecker.cpp BlockChecker.h)
+target_link_libraries(BlockCheckerTest gtest_main)
+add_test(NAME BlockCheckerTest COMMAND BlockCheckerTest)
 
+add_executable(SudokuTest SudokuTest.cpp Sudoku.cpp Sudoku.h SudokuSquare.h SudokuSquare.cpp BlockChecker.cpp BlockChecker.h)
+target_link_libraries(SudokuTest gtest_main)
+add_test(NAME SudokuTest COMMAND SudokuTest)
+
+include_directories("${gtest_SOURCE_DIR}/include")
 add_executable(sudoku Sudoku.cpp Sudoku.h SudokuSquare.h SudokuSquare.cpp BlockChecker.cpp BlockChecker.h main.cpp)

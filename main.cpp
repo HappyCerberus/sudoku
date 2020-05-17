@@ -13,6 +13,8 @@
 
 #include <vector>
 #include <sstream>
+#include <ctime>
+#include <chrono>
 #include "Sudoku.h"
 
 // Basic Sudoku 9x9
@@ -25,8 +27,8 @@
 // - 2 diagonals
 
 std::pair<int, int> find_empty(const Sudoku &sudoku) {
-    for (int i = 0; i < sudoku.data().size(); i++) {
-        for (int j = 0; j < sudoku.data()[i].size(); j++) {
+    for (size_t i = 0; i < sudoku.data().size(); i++) {
+        for (size_t j = 0; j < sudoku.data()[i].size(); j++) {
             if (!sudoku.data()[i][j].IsSet())
                 return std::make_pair(i, j);
         }
@@ -35,8 +37,8 @@ std::pair<int, int> find_empty(const Sudoku &sudoku) {
 }
 
 bool puzzle_filled(const Sudoku &sudoku) {
-    for (int i = 0; i < sudoku.data().size(); i++) {
-        for (int j = 0; j < sudoku.data()[i].size(); j++) {
+    for (size_t i = 0; i < sudoku.data().size(); i++) {
+        for (size_t j = 0; j < sudoku.data()[i].size(); j++) {
             if (!sudoku.data()[i][j].IsSet())
                 return false;
         }
@@ -65,33 +67,40 @@ bool solve_recursive(Sudoku &sudoku) {
     return false;
 }
 
-// Version 2 is done
-// We can solve sudokus & diagonal sudokus and maybe 16x16 sudokus?
+// Version 3 is done
+// We can solve sudokus & diagonal sudokus and not 16x16 sudoku.
 // Next steps:
-// - test performance V1 vs V2 using a profiler
 // - stack based non-recursive solution
-// - write tests
 // - fix the access to the elements of the puzzle Get(int x, int y); operator[]
-// - lookup data format for sudokus
 // - encapsulate the solver a class
 // - design a new puzzle data representation that is suitable for human solving
+
+// Solver rules:
+// number_of_occurences(Block, Number) == 1
+// -> that space needs to be that number
+// -> from the perspective of the solver, we can prune all other numbers from that space
+// number_of_possibilities(Block) == 1
+// -> that space is that number
+// -> from the perspective of the solver, we can prune that number from all spaces in the block
+
+
 
 
 int main() {
 
-    std::string small = "4  0  0   0  0  8   0  0  3 \n"
-                        "0  0  5   2  0  0   0  1  0 \n"
-                        "0  6  0   0  0  9   0  0  0 \n"
-                        "\n"
-                        "0  0  0   0  0  0   0  3  0 \n"
-                        "0  0  6   9  0  1   0  0  0 \n"
-                        "0  0  0   6  0  4   9  2  0 \n"
-                        "\n"
-                        "0  2  9   0  0  0   3  0  0 \n"
-                        "0  0  4   0  0  2   0  8  5 \n"
-                        "0  0  0   7  0  3   0  0  0 ";
+    std::string sudoku_9x9 = "4  0  0   0  0  8   0  0  3 \n"
+                             "0  0  5   2  0  0   0  1  0 \n"
+                             "0  6  0   0  0  9   0  0  0 \n"
+                             "\n"
+                             "0  0  0   0  0  0   0  3  0 \n"
+                             "0  0  6   9  0  1   0  0  0 \n"
+                             "0  0  0   6  0  4   9  2  0 \n"
+                             "\n"
+                             "0  2  9   0  0  0   3  0  0 \n"
+                             "0  0  4   0  0  2   0  8  5 \n"
+                             "0  0  0   7  0  3   0  0  0 ";
 
-    std::string sudoku =
+    std::string sudoku_16x16 =
             "*  9  *  *   *  *  C  *   *  *  *  *   *  *  *  *"
             "*  D  *  *   *  E  6  *   1  *  *  9   *  4  *  A"
             "*  *  F  5   *  *  *  *   8  6  *  *   1  7  C  9"
@@ -109,28 +118,72 @@ int main() {
             "C  7  *  6   E  *  8  *   *  *  *  *   *  *  *  3"
             "*  *  5  A   *  *  *  B   *  E  *  8   6  *  2  *";
 
-    std::stringstream stream(small);
-    Sudoku test3(9);
-    stream >> test3;
+    {
+        std::stringstream stream(sudoku_9x9);
+        Sudoku test(9);
+        stream >> test;
 
-    // go over all set values
-    // get all blocks the value is in
-    // prune all squares in that block
-/*
-    for (size_t i = 0; i < test3.data().size(); i++) {
-        for (size_t j = 0; j < test3.data()[i].size(); j++) {
-            if (!test3.data()[i][j].IsSet())
-                continue;
-            test3.Prune(i,j);
+        // record start time
+        auto start = std::chrono::system_clock::now();
+
+        if (!solve_recursive(test)) {
+            std::cout << "There is something very wrong!" << std::endl;
         }
-    }
-*/
-    std::cout << test3 << std::endl;
 
-    if (!solve_recursive(test3)) {
-        std::cout << "There is something very wrong!" << std::endl;
+        auto end = std::chrono::system_clock::now();
+        std::chrono::duration<double> diff = end - start;
+        std::cout << "Time to solve 9x9 un-pruned sudoku " << diff.count() << " s\n";
     }
 
-    std::cout << test3 << std::endl;
+    {
+        std::stringstream stream(sudoku_9x9);
+        Sudoku test(9);
+        stream >> test;
+
+        // record start time
+        auto start = std::chrono::system_clock::now();
+
+        for (size_t i = 0; i < test.data().size(); i++) {
+            for (size_t j = 0; j < test.data()[i].size(); j++) {
+                if (!test.data()[i][j].IsSet())
+                    continue;
+                test.Prune(i, j);
+            }
+        }
+
+        if (!solve_recursive(test)) {
+            std::cout << "There is something very wrong!" << std::endl;
+        }
+
+        auto end = std::chrono::system_clock::now();
+        std::chrono::duration<double> diff = end - start;
+        std::cout << "Time to solve 9x9 pruned sudoku " << diff.count() << " s\n";
+    }
+
+    {
+        std::stringstream stream(sudoku_16x16);
+        Sudoku test(16);
+        stream >> test;
+
+        // record start time
+        auto start = std::chrono::system_clock::now();
+
+        for (size_t i = 0; i < test.data().size(); i++) {
+            for (size_t j = 0; j < test.data()[i].size(); j++) {
+                if (!test.data()[i][j].IsSet())
+                    continue;
+                test.Prune(i, j);
+            }
+        }
+
+        if (!solve_recursive(test)) {
+            std::cout << "There is something very wrong!" << std::endl;
+        }
+
+        auto end = std::chrono::system_clock::now();
+        std::chrono::duration<double> diff = end - start;
+        std::cout << "Time to solve 16x16 pruned sudoku " << diff.count() << " s\n";
+    }
+
     return 0;
 }

@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdint>
 #include "SudokuSquare.h"
+#include "gtest/gtest_prod.h"
 
 typedef std::vector<SquareType *> SudokuBlockType;
 
@@ -18,6 +19,8 @@ public:
 
 private:
     SudokuBlockType elem_;
+
+    FRIEND_TEST(SudokuTest, SetupCheckers);
 };
 
 

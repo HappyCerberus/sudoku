@@ -3,6 +3,7 @@
 #define SUDOKU_SUDOKU_H
 
 #include "BlockChecker.h"
+#include "gtest/gtest_prod.h"
 #include <iosfwd>
 #include <unordered_set>
 #include <vector>
@@ -21,6 +22,14 @@ public:
 
     Sudoku(SudokuDataType data, SudokuTypes type = BASIC);
 
+    Sudoku(const Sudoku &) = delete;
+
+    Sudoku(Sudoku &&) = delete;
+
+    Sudoku &operator=(const Sudoku &) = delete;
+
+    Sudoku &operator=(Sudoku &&) = delete;
+
     bool CheckPuzzle();
 
     SudokuDataType &data() { return data_; }
@@ -31,14 +40,17 @@ public:
 
     void Prune(size_t x, size_t y, unsigned number);
 
+    void DebugPrint(std::ostream &s);
+
 
 private:
     std::vector<BlockChecker> checks_;
     SudokuDataType data_;
-    std::vector<std::vector<std::unordered_set<BlockChecker *>>> block_mapping_;
+    std::vector<std::vector<std::vector<BlockChecker *>>> block_mapping_;
 
     void SetupCheckers(unsigned size = 9, SudokuTypes type = BASIC);
 
+    FRIEND_TEST(SudokuTest, SetupCheckers);
 };
 
 std::ostream &operator<<(std::ostream &s, const Sudoku &puzzle);

@@ -7,15 +7,15 @@
 
 Sudoku::Sudoku(unsigned size, SudokuTypes type) : data_(size, std::vector<SquareType>(size, SquareType{size})),
                                                   block_mapping_(size,
-                                                                 std::vector<std::unordered_set<BlockChecker *>>(size,
-                                                                                                                 std::unordered_set<BlockChecker *>{})) {
+                                                                 std::vector<std::vector<BlockChecker *>>(size,
+                                                                                                          std::vector<BlockChecker *>())) {
     SetupCheckers(size, type);
 }
 
 Sudoku::Sudoku(SudokuDataType data, SudokuTypes type) : data_(std::move(data)), block_mapping_(data_.size(),
-                                                                                               std::vector<std::unordered_set<BlockChecker *>>(
+                                                                                               std::vector<std::vector<BlockChecker *>>(
                                                                                                        data_.size(),
-                                                                                                       std::unordered_set<BlockChecker *>{})) {
+                                                                                                       std::vector<BlockChecker *>())) {
     SetupCheckers(data_.size(), type);
 }
 
@@ -43,7 +43,7 @@ void Sudoku::SetupCheckers(unsigned int size, SudokuTypes type) {
         }
         checks_.emplace_back(row);
         for (size_t j = 0; j < size; j++) {
-            block_mapping_[i][j].insert(&checks_[checks_.size() - 1]);
+            block_mapping_[i][j].push_back(&checks_[checks_.size() - 1]);
         }
     }
 
@@ -54,7 +54,7 @@ void Sudoku::SetupCheckers(unsigned int size, SudokuTypes type) {
         }
         checks_.emplace_back(column);
         for (size_t i = 0; i < size; i++) {
-            block_mapping_[i][j].insert(&checks_[checks_.size() - 1]);
+            block_mapping_[i][j].push_back(&checks_[checks_.size() - 1]);
         }
     }
 
@@ -74,7 +74,7 @@ void Sudoku::SetupCheckers(unsigned int size, SudokuTypes type) {
             checks_.emplace_back(block);
             for (size_t x = i * bsize; x < (i + 1) * bsize; x++) {
                 for (size_t y = j * bsize; y < (j + 1) * bsize; y++) {
-                    block_mapping_[i][j].insert(&checks_[checks_.size() - 1]);
+                    block_mapping_[x][y].push_back(&checks_[checks_.size() - 1]);
                 }
             }
         }
@@ -91,8 +91,8 @@ void Sudoku::SetupCheckers(unsigned int size, SudokuTypes type) {
     checks_.emplace_back(d1);
     checks_.emplace_back(d2);
     for (size_t i = 0; i < size; i++) {
-        block_mapping_[i][i].insert(&checks_[checks_.size() - 2]);
-        block_mapping_[i][size - 1 - i].insert(&checks_[checks_.size() - 1]);
+        block_mapping_[i][i].push_back(&checks_[checks_.size() - 2]);
+        block_mapping_[i][size - 1 - i].push_back(&checks_[checks_.size() - 1]);
     }
 }
 
@@ -104,6 +104,16 @@ void Sudoku::Prune(size_t x, size_t y, unsigned int number) {
 
 void Sudoku::Prune(size_t x, size_t y) {
     Prune(x, y, data_[x][y].Value());
+}
+
+void Sudoku::DebugPrint(std::ostream &s) {
+    for (size_t i = 0; i < data_.size(); i++) {
+        for (size_t j = 0; j < data_[i].size(); j++) {
+            data_[i][j].DebugPrint(s);
+            s << " ";
+        }
+        s << std::endl;
+    }
 }
 
 

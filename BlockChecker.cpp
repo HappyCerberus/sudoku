@@ -1,5 +1,6 @@
 /* (c) 2020 RNDr. Simon Toth (happy.cerberus@gmail.com) */
 
+#include <bitset>
 #include "BlockChecker.h"
 
 BlockChecker::BlockChecker(const SudokuBlockType &elements) : elem_(elements) {}
