@@ -1,5 +1,3 @@
-//
-// Created by Happy on 16/05/2020.
-//
+// (c) 2020 RNDr. Simon Toth (happy.cerberus@gmail.com)
 
 #include "SudokuSquare.h"

@@ -1,6 +1,4 @@
-//
-// Created by Happy on 16/05/2020.
-//
+// (c) 2020 RNDr. Simon Toth (happy.cerberus@gmail.com)
 
 #ifndef SUDOKU_SUDOKUSQUARE_H
 #define SUDOKU_SUDOKUSQUARE_H
