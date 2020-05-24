@@ -5,6 +5,7 @@
 #include "SudokuSquare.h"
 #include "gtest/gtest_prod.h"
 #include <cstdint>
+#include <unordered_set>
 #include <vector>
 
 typedef std::vector<SquareType *> SudokuBlockType;
@@ -16,8 +17,16 @@ public:
   bool Check() const;
 
   void Prune(unsigned number);
+  void Prune(unsigned number, const std::vector<size_t> &whitelist);
 
   void Solve();
+
+  std::unordered_set<size_t> NumberPositions(size_t number) const;
+  void NumberPositions(size_t number,
+                       std::unordered_set<size_t> &positions) const;
+
+  void PruneInterection(BlockChecker &r) const;
+  const std::vector<SquareType *> &GetSquares() const { return elem_; }
 
 private:
   SudokuBlockType elem_;
@@ -26,15 +35,15 @@ private:
 };
 
 void recursive_set_find(std::vector<std::vector<size_t>> &result,
-                        const std::vector<SquareType *> &squares, size_t size,
-                        size_t consumed = 0,
-                        std::vector<size_t> path = std::vector<size_t>{},
-                        size_t first_index = 0);
+                        const std::vector<SquareType *> &squares, size_t size);
 
 void recursive_number_find(std::vector<std::vector<size_t>> &result,
                            const std::vector<SquareType *> &squares,
-                           size_t size, size_t consumed = 0,
-                           std::vector<size_t> numbers = std::vector<size_t>{},
-                           size_t first_index = 0);
+                           size_t size);
+
+// TODO: write tests
+void recursive_swordfish_find(std::vector<std::vector<size_t>> &result,
+                              const std::vector<BlockChecker *> &blocks,
+                              size_t size, size_t number);
 
 #endif // SUDOKU_BLOCKCHECKER_H

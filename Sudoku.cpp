@@ -8,7 +8,8 @@
 Sudoku::Sudoku(unsigned size, SudokuTypes type)
     : data_(size, std::vector<SquareType>(size, SquareType{size})),
       block_mapping_(size, std::vector<std::vector<BlockChecker *>>(
-                               size, std::vector<BlockChecker *>())) {
+                               size, std::vector<BlockChecker *>())),
+      size_(size) {
   SetupCheckers(size, type);
 }
 
@@ -16,7 +17,8 @@ Sudoku::Sudoku(SudokuDataType data, SudokuTypes type)
     : data_(std::move(data)),
       block_mapping_(data_.size(),
                      std::vector<std::vector<BlockChecker *>>(
-                         data_.size(), std::vector<BlockChecker *>())) {
+                         data_.size(), std::vector<BlockChecker *>())),
+      size_(data_.size()) {
   SetupCheckers(data_.size(), type);
 }
 
@@ -46,6 +48,7 @@ void Sudoku::SetupCheckers(unsigned int size, SudokuTypes type) {
     for (size_t j = 0; j < size; j++) {
       block_mapping_[i][j].push_back(&checks_[checks_.size() - 1]);
     }
+    row_checks_.push_back(&checks_[checks_.size() - 1]);
   }
 
   for (size_t j = 0; j < size; j++) {
@@ -57,6 +60,7 @@ void Sudoku::SetupCheckers(unsigned int size, SudokuTypes type) {
     for (size_t i = 0; i < size; i++) {
       block_mapping_[i][j].push_back(&checks_[checks_.size() - 1]);
     }
+    col_checks_.push_back(&checks_[checks_.size() - 1]);
   }
 
   std::unordered_map<unsigned, unsigned> blocksizes = {{9, 3}, {16, 4}};

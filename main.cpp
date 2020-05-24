@@ -77,33 +77,66 @@ bool solve_smart(Sudoku &sudoku) {
     for (auto &block : changed_blocks) {
       block->Solve();
     }
+
+    // Intersecting blocks rule
+    for (auto &block : changed_blocks) {
+      for (auto &rblock : sudoku.Blocks()) {
+        block->PruneInterection(rblock);
+      }
+    }
+
+    // Swordfish
+    for (size_t i = 2; i <= sudoku.Size() / 2; i++) { // sizes of the swordfish
+      for (size_t j = 1; j <= sudoku.Size(); j++) {
+        std::vector<std::vector<size_t>> result;
+        recursive_swordfish_find(result, sudoku.GetColBlocks(), i, j);
+        // process results
+        for (const auto &v : result) {
+          // the affected rows, remove number from all columns not in set
+          std::unordered_set<size_t> rows;
+          for (size_t x : v) {
+            sudoku.GetColBlocks()[x]->NumberPositions(j, rows);
+          }
+          for (auto r : rows) {
+            sudoku.GetRowBlocks()[r]->Prune(j, v);
+          }
+        }
+
+        result.clear();
+        recursive_swordfish_find(result, sudoku.GetRowBlocks(), i, j);
+        // process results
+        for (const auto &v : result) {
+          // the affected columns, remove number from all rows not in set
+          std::unordered_set<size_t> cols;
+          // figure out affected columns
+          for (size_t x : v) {
+            sudoku.GetRowBlocks()[x]->NumberPositions(j, cols);
+          }
+          // Remove the number from everywhere except the rows in set
+          for (auto r : cols) {
+            sudoku.GetColBlocks()[r]->Prune(j, v);
+          }
+        }
+      }
+    }
   }
 
   return puzzle_filled(sudoku);
 }
 
-// Version 3 is done
-// We can solve sudokus & diagonal sudokus and not 16x16 sudoku.
+// Version 5 is done
+// - we can solve easy sudokus
+// - implemented inside block set finding
+// - implemented block intersections
+// - implemented swordfish
+
 // Next steps:
-// - stack based non-recursive solution
-// - fix the access to the elements of the puzzle Get(int x, int y); operator[]
-// - encapsulate the solver a class
-// - design a new puzzle data representation that is suitable for human solving
-
-// Solver rules:
-// number_of_occurences(Block, Number) == 1
-// -> that space needs to be that number
-// -> from the perspective of the solver, we can prune all other numbers from
-// that space number_of_possibilities(Block) == 1
-// -> that space is that number
-// -> from the perspective of the solver, we can prune that number from all
-// spaces in the block
-
-// if we pick X squares, and the number of possibilities within these squares
-// is X -> then these possibilities can't appear anywhere else in the block
-
-// if X possibilities only appear in X squares, then those squares can't
-// contain any other numbers
+// - we need code cleanup
+//   - extract helper methods
+//   - Get(int x, int y), or operator [] to get to a Square
+// - we need tests for block intersections & swordfish
+// - design a new puzzle data representation that is suitable for human
+//   solving (this would help testing)
 
 int main() {
 
@@ -200,6 +233,83 @@ int main() {
               << " "
                  "s\n";
     std::cout << test << std::endl;
+  }
+
+  std::vector<std::string> puzzles{std::string{"5  0  0   0  0  0   0  6  0 \n"
+                                               "0  0  2   0  0  0   0  0  1 \n"
+                                               "0  1  0   0  0  0   5  0  0 \n"
+                                               "\n"
+                                               "0  8  0   0  0  5   3  0  0 \n"
+                                               "9  0  0   2  0  0   0  0  0 \n"
+                                               "0  0  6   0  4  0   0  0  7 \n"
+                                               "\n"
+                                               "0  3  0   0  0  9   8  0  0 \n"
+                                               "6  0  0   1  0  0   0  3  0 \n"
+                                               "0  0  5   0  7  0   0  0  4 "},
+                                   std::string{"0  0  0   3  0  0   0  0  9 \n"
+                                               "0  0  0   0  2  0   0  3  0 \n"
+                                               "0  0  0   0  0  7   2  0  0 \n"
+                                               "\n"
+                                               "1  0  0   0  0  9   8  0  0 \n"
+                                               "0  0  7   4  0  0   0  0  0 \n"
+                                               "0  3  0   0  6  0   0  5  0 \n"
+                                               "\n"
+                                               "0  4  0   0  5  0   0  6  0 \n"
+                                               "8  0  0   0  0  3   1  0  0 \n"
+                                               "0  0  2   9  0  0   3  0  5 "},
+                                   std::string{"7  0  0   0  0  5   0  0  8 \n"
+                                               "0  0  1   2  0  0   0  9  0 \n"
+                                               "0  6  0   0  3  0   1  0  0 \n"
+                                               "\n"
+                                               "0  8  0   0  0  0   2  0  0 \n"
+                                               "2  0  0   0  0  0   0  0  4 \n"
+                                               "0  0  9   0  0  0   0  8  0 \n"
+                                               "\n"
+                                               "5  0  0   0  0  7   0  0  9 \n"
+                                               "0  1  0   0  8  0   6  0  0 \n"
+                                               "0  0  0   4  0  0   0  3  0 "},
+                                   std::string{"0  0  9   0  0  6   0  1  0 \n"
+                                               "0  7  0   2  0  0   3  0  0 \n"
+                                               "5  6  0   0  4  0   0  0  7 \n"
+                                               "\n"
+                                               "2  0  0   0  8  0   0  0  0 \n"
+                                               "0  0  5   0  0  1   0  6  0 \n"
+                                               "0  3  0   9  0  0   7  0  0 \n"
+                                               "\n"
+                                               "9  0  0   0  0  0   0  0  5 \n"
+                                               "0  4  0   0  0  0   9  0  0 \n"
+                                               "0  0  8   0  0  0   0  4  0 "},
+                                   std::string{"0  0  3   0  0  5   0  0  9 \n"
+                                               "9  0  0   2  0  0   0  6  0 \n"
+                                               "0  8  0   0  4  0   7  0  0 \n"
+                                               "\n"
+                                               "0  0  7   0  0  0   0  0  2 \n"
+                                               "0  2  0   0  0  0   1  0  0 \n"
+                                               "6  0  0   0  0  0   0  7  0 \n"
+                                               "\n"
+                                               "0  4  0   0  8  0   6  0  0 \n"
+                                               "0  0  0   1  0  0   0  5  0 \n"
+                                               "0  0  9   0  0  7   0  0  3 "}};
+
+  for (auto &sudoku : puzzles) {
+    std::stringstream stream(sudoku);
+    Sudoku test(9);
+    stream >> test;
+
+    // record start time
+    auto start = std::chrono::system_clock::now();
+
+    if (!solve_smart(test)) {
+      std::cout << "There is something very wrong!" << std::endl;
+    }
+
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> diff = end - start;
+    std::cout << "Time to smart solve 9x9 sudoku " << diff.count()
+              << " "
+                 "s\n";
+    std::cout << test << std::endl;
+    test.DebugPrint(std::cout);
   }
 
   {

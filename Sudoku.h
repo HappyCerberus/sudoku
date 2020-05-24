@@ -32,6 +32,8 @@ public:
   bool HasChange() const;
   void ResetChange();
   std::unordered_set<BlockChecker *> ChangedBlocks() const;
+  const std::vector<BlockChecker> &Blocks() const { return checks_; }
+  std::vector<BlockChecker> &Blocks() { return checks_; }
 
   SudokuDataType &data() { return data_; }
 
@@ -43,10 +45,22 @@ public:
 
   void DebugPrint(std::ostream &s);
 
+  const std::vector<BlockChecker *> &GetRowBlocks() const {
+    return row_checks_;
+  }
+  const std::vector<BlockChecker *> &GetColBlocks() const {
+    return col_checks_;
+  }
+
+  size_t Size() { return size_; }
+
 private:
   std::vector<BlockChecker> checks_;
+  std::vector<BlockChecker *> row_checks_;
+  std::vector<BlockChecker *> col_checks_;
   SudokuDataType data_;
   std::vector<std::vector<std::vector<BlockChecker *>>> block_mapping_;
+  size_t size_;
 
   void SetupCheckers(unsigned size = 9, SudokuTypes type = BASIC);
 
