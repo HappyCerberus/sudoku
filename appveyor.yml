@@ -13,6 +13,10 @@ build_script:
 
     cmake --build . --config "Release"
 
+
 test_script:
-- cmd: ctest -C Debug
+- cmd: >-
+    cmake c:\projects\source -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE:STRING=Debug
+    cmake --build . --config "Debug"
+    ctest -C Debug
 

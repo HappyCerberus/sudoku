@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 # Set the project name to your project name, my project isn't very descriptive
 project(sudoku CXX)
+set(CMAKE_CXX_STANDARD 17)
 include(cmake/StandardProjectSettings.cmake)
 
 # Link this 'library' to set the c++ standard / compile-time options requested
