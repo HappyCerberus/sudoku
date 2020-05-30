@@ -1,6 +1,7 @@
 /* (c) 2020 RNDr. Simon Toth (happy.cerberus@gmail.com) */
 
 #include "BlockChecker.h"
+#include "Square.h"
 #include <bitset>
 #include <functional>
 
@@ -59,30 +60,30 @@ void generic_recursive_find(
 // if we pick X squares, and the number of possibilities within these squares
 // is X -> then these possibilities can't appear anywhere else in the block
 void recursive_set_find(std::vector<std::vector<size_t>> &result,
-                        const std::vector<SquareType *> &squares, size_t size) {
-  auto check = [](const std::vector<SquareType *> &elems,
+                        const std::vector<sudoku::SquareType *> &squares, size_t size) {
+  auto check = [](const std::vector<sudoku::SquareType *> &elems,
                   const std::vector<size_t> &set) -> bool {
-    SquareType tmp_union(elems.size());
+    sudoku::SquareType tmp_union(elems.size());
     tmp_union.SetToEmpty();
     for (size_t x : set) {
-      tmp_union.Union(*elems[x]);
+      tmp_union += *elems[x];
     }
     return tmp_union.CountPossible() == set.size();
   };
-  generic_recursive_find<SquareType>(result, squares, size, check);
+  generic_recursive_find<sudoku::SquareType>(result, squares, size, check);
 }
 
 // if X possibilities only appear in X squares, then those squares can't
 // contain any other numbers
 void recursive_number_find(std::vector<std::vector<size_t>> &result,
-                           const std::vector<SquareType *> &squares,
+                           const std::vector<sudoku::SquareType *> &squares,
                            size_t size) {
-  auto check = [](const std::vector<SquareType *> &elems,
+  auto check = [](const std::vector<sudoku::SquareType *> &elems,
                   const std::vector<size_t> &set) -> bool {
-    SquareType tmp_numbers(elems.size());
+    sudoku::SquareType tmp_numbers(elems.size());
     tmp_numbers.SetToEmpty();
     for (size_t x : set) {
-      tmp_numbers.Add(x + 1);
+      tmp_numbers += x + 1;
     }
 
     size_t count_squares = 0;
@@ -93,7 +94,7 @@ void recursive_number_find(std::vector<std::vector<size_t>> &result,
 
     return count_squares == set.size();
   };
-  generic_recursive_find<SquareType>(result, squares, size, check);
+  generic_recursive_find<sudoku::SquareType>(result, squares, size, check);
 }
 
 // swordfish: grab X number of blocks, we look at the positions of a number, if
@@ -117,10 +118,10 @@ void BlockChecker::Solve() {
     std::vector<std::vector<size_t>> result;
     recursive_number_find(result, elem_, i);
     for (size_t x = 0; x < result.size(); x++) {
-      SquareType u(elem_.size());
+      sudoku::SquareType u(elem_.size());
       u.SetToEmpty();
       for (size_t y = 0; y < result[x].size(); y++) {
-        u.Add(result[x][y] + 1);
+        u += result[x][y] + 1;
       }
       for (size_t j = 0; j < elem_.size(); j++) {
         if (elem_[j]->HasIntersection(u)) {
@@ -134,10 +135,10 @@ void BlockChecker::Solve() {
     std::vector<std::vector<size_t>> result;
     recursive_set_find(result, elem_, i);
     for (size_t x = 0; x < result.size(); x++) {
-      SquareType u(elem_.size());
+      sudoku::SquareType u(elem_.size());
       u.SetToEmpty();
       for (size_t y = 0; y < result[x].size(); y++) {
-        u.Union(*elem_[result[x][y]]);
+        u += *elem_[result[x][y]];
       }
       for (size_t j = 0; j < elem_.size(); j++) {
         bool skip = false;
@@ -145,7 +146,7 @@ void BlockChecker::Solve() {
           if (result[x][y] == j)
             skip = true;
         if (!skip)
-          elem_[j]->Minus(u);
+          (*elem_[j]) -= u;
       }
     }
   }
@@ -153,7 +154,7 @@ void BlockChecker::Solve() {
 
 void BlockChecker::PruneInterection(BlockChecker &r) const {
   std::unordered_set<size_t> result;
-  std::unordered_set<SquareType *> intersection;
+  std::unordered_set<sudoku::SquareType *> intersection;
   for (auto i : elem_) {
     for (auto j : r.elem_) {
       if (i == j)
@@ -198,7 +199,7 @@ void BlockChecker::PruneInterection(BlockChecker &r) const {
       continue;
 
     for (size_t number : result) {
-      e->Remove(number);
+      (*e) -= number;
     }
   }
 }
@@ -231,6 +232,6 @@ void BlockChecker::Prune(unsigned int number,
       continue;
     if (elem_[i]->IsSet())
       continue;
-    elem_[i]->Remove(number);
+    (*elem_[i]) -= number;
   }
 }

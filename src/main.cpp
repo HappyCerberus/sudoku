@@ -10,6 +10,7 @@
 
 // [DONE] Basic Solver - backtracking
 
+#include "Square.h"
 #include "Sudoku.h"
 #include <chrono>
 #include <ctime>
@@ -55,7 +56,7 @@ bool solve_recursive(Sudoku &sudoku) {
   }
 
   auto next = find_empty(sudoku);
-  SquareType original = sudoku.data()[next.first][next.second];
+  sudoku::SquareType original = sudoku.data()[next.first][next.second];
   unsigned v = 0;
   while ((v = original.Next(v)) != 0) {
     sudoku.data()[next.first][next.second].Set(v);

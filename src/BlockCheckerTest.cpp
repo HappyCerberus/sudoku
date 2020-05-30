@@ -1,13 +1,15 @@
 /* (c) 2020 RNDr. Simon Toth (happy.cerberus@gmail.com) */
 
 #include "BlockChecker.h"
+#include "Square.h"
 #include "gmock/gmock-matchers.h"
 #include "gtest/gtest.h"
 
 TEST(BlockCheckerTest, Check) {
-  std::vector<SquareType> actual{SquareType(3), SquareType(3), SquareType(3)};
+  std::vector<sudoku::SquareType> actual{
+      sudoku::SquareType(3), sudoku::SquareType(3), sudoku::SquareType(3)};
   BlockChecker blockChecker(
-      std::vector<SquareType *>{&actual[0], &actual[1], &actual[2]});
+      std::vector<sudoku::SquareType *>{&actual[0], &actual[1], &actual[2]});
   actual[0].Set(1);
   actual[1].Set(2);
   actual[2].Set(3);
@@ -19,9 +21,10 @@ TEST(BlockCheckerTest, Check) {
 }
 
 TEST(BlockCheckerTest, Prune) {
-  std::vector<SquareType> actual{SquareType(3), SquareType(3), SquareType(3)};
+  std::vector<sudoku::SquareType> actual{
+      sudoku::SquareType(3), sudoku::SquareType(3), sudoku::SquareType(3)};
   BlockChecker blockChecker(
-      std::vector<SquareType *>{&actual[0], &actual[1], &actual[2]});
+      std::vector<sudoku::SquareType *>{&actual[0], &actual[1], &actual[2]});
   blockChecker.Prune(1);
   blockChecker.Prune(2);
   for (size_t i = 0; i < 3; i++) {
@@ -32,9 +35,11 @@ TEST(BlockCheckerTest, Prune) {
   EXPECT_EQ(actual[0].CountPossible(), 2);
 }
 
+namespace sudoku {
+
 TEST(BlockCheckerTest, recursive_set_find) {
-  std::vector<SquareType> data(9, SquareType{9});
-  std::vector<SquareType *> squares;
+  std::vector<sudoku::SquareType> data(9, sudoku::SquareType{9});
+  std::vector<sudoku::SquareType *> squares;
   for (size_t i = 0; i < data.size(); i++) {
     squares.push_back(&data[i]);
   }
@@ -74,8 +79,8 @@ TEST(BlockCheckerTest, recursive_set_find) {
 }
 
 TEST(BlockCheckerTest, recursive_number_find) {
-  std::vector<SquareType> data(9, SquareType{9});
-  std::vector<SquareType *> squares;
+  std::vector<sudoku::SquareType> data(9, sudoku::SquareType{9});
+  std::vector<sudoku::SquareType *> squares;
   for (size_t i = 0; i < data.size(); i++) {
     squares.push_back(&data[i]);
   }
@@ -112,4 +117,6 @@ TEST(BlockCheckerTest, recursive_number_find) {
                                               std::vector<size_t>{3, 4},
                                               std::vector<size_t>{7, 8}));
   }
+}
+
 }

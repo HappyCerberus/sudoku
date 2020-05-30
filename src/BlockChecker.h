@@ -2,13 +2,13 @@
 #ifndef SUDOKU_BLOCKCHECKER_H
 #define SUDOKU_BLOCKCHECKER_H
 
-#include "SudokuSquare.h"
+#include "Square.h"
 #include "gtest/gtest_prod.h"
 #include <cstdint>
 #include <unordered_set>
 #include <vector>
 
-typedef std::vector<SquareType *> SudokuBlockType;
+typedef std::vector<::sudoku::SquareType *> SudokuBlockType;
 
 class BlockChecker {
 public:
@@ -26,7 +26,7 @@ public:
                        std::unordered_set<size_t> &positions) const;
 
   void PruneInterection(BlockChecker &r) const;
-  const std::vector<SquareType *> &GetSquares() const { return elem_; }
+  const std::vector<sudoku::SquareType *> &GetSquares() const { return elem_; }
 
 private:
   SudokuBlockType elem_;
@@ -35,10 +35,10 @@ private:
 };
 
 void recursive_set_find(std::vector<std::vector<size_t>> &result,
-                        const std::vector<SquareType *> &squares, size_t size);
+                        const std::vector<sudoku::SquareType *> &squares, size_t size);
 
 void recursive_number_find(std::vector<std::vector<size_t>> &result,
-                           const std::vector<SquareType *> &squares,
+                           const std::vector<sudoku::SquareType *> &squares,
                            size_t size);
 
 // TODO: write tests

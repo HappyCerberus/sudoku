@@ -3,6 +3,7 @@
 #define SUDOKU_SUDOKU_H
 
 #include "BlockChecker.h"
+#include "Square.h"
 #include "gtest/gtest_prod.h"
 #include <cstdint>
 #include <iosfwd>
@@ -11,7 +12,7 @@
 
 enum SudokuTypes { BASIC = 1, DIAGONAL = 2 };
 
-typedef std::vector<std::vector<SquareType>> SudokuDataType;
+typedef std::vector<std::vector<sudoku::SquareType>> SudokuDataType;
 
 class Sudoku {
 public:

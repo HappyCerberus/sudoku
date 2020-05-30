@@ -1,12 +1,13 @@
 /* (c) 2020 RNDr. Simon Toth (happy.cerberus@gmail.com) */
 
 #include "Sudoku.h"
+#include "Square.h"
 #include <iomanip>
 #include <ostream>
 #include <unordered_map>
 
 Sudoku::Sudoku(unsigned size, SudokuTypes type)
-    : data_(size, std::vector<SquareType>(size, SquareType{size})),
+    : data_(size, std::vector<sudoku::SquareType>(size, sudoku::SquareType{size})),
       block_mapping_(size, std::vector<std::vector<BlockChecker *>>(
                                size, std::vector<BlockChecker *>())),
       size_(size) {

@@ -31,7 +31,7 @@ include_directories("${gmock_SOURCE_DIR}/include")
 
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-add_executable(SudokuSquareTest SudokuSquareTest.cpp SudokuSquare.h SudokuSquare.cpp)
+add_executable(SudokuSquareTest SudokuSquareTest.cpp Square.h Square.cpp)
 target_link_libraries(SudokuSquareTest gtest_main)
 add_test(NAME SudokuSquareTest COMMAND SudokuSquareTest)
 
@@ -39,8 +39,8 @@ add_executable(BlockCheckerTest BlockCheckerTest.cpp BlockChecker.cpp BlockCheck
 target_link_libraries(BlockCheckerTest gtest_main gmock)
 add_test(NAME BlockCheckerTest COMMAND BlockCheckerTest)
 
-add_executable(SudokuTest SudokuTest.cpp Sudoku.cpp Sudoku.h SudokuSquare.h SudokuSquare.cpp BlockChecker.cpp BlockChecker.h)
+add_executable(SudokuTest SudokuTest.cpp Sudoku.cpp Sudoku.h Square.h Square.cpp BlockChecker.cpp BlockChecker.h)
 target_link_libraries(SudokuTest gtest_main)
 add_test(NAME SudokuTest COMMAND SudokuTest)
 
-add_executable(sudoku Sudoku.cpp Sudoku.h SudokuSquare.h SudokuSquare.cpp BlockChecker.cpp BlockChecker.h main.cpp)
+add_executable(sudoku Sudoku.cpp Sudoku.h Square.h Square.cpp BlockChecker.cpp BlockChecker.h main.cpp)
