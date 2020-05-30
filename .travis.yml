@@ -1,5 +1,9 @@
 language: cpp
 
+
+install:
+  - pip install --user conan cmake
+
 jobs:
   include:
     - os: osx
