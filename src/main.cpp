@@ -26,20 +26,20 @@
 // - basic sudoku
 // - 2 diagonals
 
-std::pair<int, int> find_empty(const Sudoku &sudoku) {
+std::pair<int, int> find_empty(const sudoku::Sudoku &sudoku) {
   for (size_t i = 0; i < sudoku.data().size(); i++) {
     for (size_t j = 0; j < sudoku.data()[i].size(); j++) {
-      if (!sudoku.data()[i][j].IsSet())
+      if (!sudoku[i][j].IsSet())
         return std::make_pair(i, j);
     }
   }
   return std::make_pair(-1, -1);
 }
 
-bool puzzle_filled(const Sudoku &sudoku) {
+bool puzzle_filled(const sudoku::Sudoku &sudoku) {
   for (size_t i = 0; i < sudoku.data().size(); i++) {
     for (size_t j = 0; j < sudoku.data()[i].size(); j++) {
-      if (!sudoku.data()[i][j].IsSet())
+      if (!sudoku[i][j].IsSet())
         return false;
     }
   }
@@ -47,7 +47,7 @@ bool puzzle_filled(const Sudoku &sudoku) {
   return true;
 }
 
-bool solve_recursive(Sudoku &sudoku) {
+bool solve_recursive(sudoku::Sudoku &sudoku) {
   if (!sudoku.CheckPuzzle()) {
     return false;
   }
@@ -56,18 +56,18 @@ bool solve_recursive(Sudoku &sudoku) {
   }
 
   auto next = find_empty(sudoku);
-  sudoku::SquareType original = sudoku.data()[next.first][next.second];
+  sudoku::Square original = sudoku[next.first][next.second];
   unsigned v = 0;
   while ((v = original.Next(v)) != 0) {
-    sudoku.data()[next.first][next.second].Set(v);
+    sudoku[next.first][next.second] = v;
     if (solve_recursive(sudoku))
       return true;
   }
-  sudoku.data()[next.first][next.second] = original;
+  sudoku[next.first][next.second] = original;
   return false;
 }
 
-bool solve_smart(Sudoku &sudoku) {
+bool solve_smart(sudoku::Sudoku &sudoku) {
   while (!puzzle_filled(sudoku)) {
     auto changed_blocks = sudoku.ChangedBlocks();
     if (changed_blocks.size() == 0) {
@@ -125,19 +125,19 @@ bool solve_smart(Sudoku &sudoku) {
   return puzzle_filled(sudoku);
 }
 
-// Version 5 is done
+// Version 7 is done
 // - we can solve easy sudokus
 // - implemented inside block set finding
 // - implemented block intersections
 // - implemented swordfish
 
 // Next steps:
-// - we need code cleanup
-//   - extract helper methods
-//   - Get(int x, int y), or operator [] to get to a Square
+// - unsigned vs size_t cleanup
+//   - don't rely on vectors for the size
 // - we need tests for block intersections & swordfish
 // - design a new puzzle data representation that is suitable for human
 //   solving (this would help testing)
+// - cleanup interface on BlockChecker & Sudoku
 
 int main() {
 
@@ -173,7 +173,7 @@ int main() {
 
   {
     std::stringstream stream(sudoku_9x9);
-    Sudoku test(9);
+    sudoku::Sudoku test(9);
     stream >> test;
 
     // record start time
@@ -192,7 +192,7 @@ int main() {
 
   {
     std::stringstream stream(sudoku_9x9);
-    Sudoku test(9);
+    sudoku::Sudoku test(9);
     stream >> test;
 
     // record start time
@@ -218,7 +218,7 @@ int main() {
 
   {
     std::stringstream stream(sudoku_9x9);
-    Sudoku test(9);
+    sudoku::Sudoku test(9);
     stream >> test;
 
     // record start time
@@ -294,7 +294,7 @@ int main() {
 
   for (auto &sudoku : puzzles) {
     std::stringstream stream(sudoku);
-    Sudoku test(9);
+    sudoku::Sudoku test(9);
     stream >> test;
 
     // record start time
@@ -315,7 +315,7 @@ int main() {
 
   {
     std::stringstream stream(sudoku_16x16);
-    Sudoku test(16);
+    sudoku::Sudoku test(16);
     stream >> test;
 
     // record start time

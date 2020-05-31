@@ -5,42 +5,75 @@
 
 #include "gtest/gtest_prod.h"
 #include <cstdint>
-#include <ostream>
+#include <iosfwd>
 #include <vector>
+#include <cassert>
 
 namespace sudoku {
-template <typename T> class Square {
+class Square {
+  static const constexpr uint64_t ZERO64 = 0;
 public:
-  typedef T BackingType;
-
+  // No default constructor.
   Square() = delete;
+  // Default copy constructor.
+  Square(const Square& r) = default;
+  // Default move constructor.
+  Square(Square&& r) = default;
 
-  Square(unsigned max_value = 9)
-      : data_(~((~0u) << max_value)), max_(max_value), changed_(true) {
+  /*! Construct a square with all possibilities present
+   *
+   * @param max_value Maximum number to support {9, 16, 25, 36, 49, 64}
+   */
+  explicit Square(unsigned max_value = 9)
+      : data_(~((~ZERO64) << static_cast<uint64_t>(max_value))), max_
+              (static_cast<uint8_t>(max_value)),
+        changed_(true) {
+    assert(max_value <= 64);
   }
 
-  Square(const Square<T>& r) = default;
+  /*! Construct a square with all possibilities present
+   *
+   * @param max_value Maximum number to support {9, 16, 25, 36, 49, 64}
+   */
+  explicit Square(size_t max_value = 9) : Square(static_cast<unsigned>
+                                                 (max_value)) {};
 
+  /*! Return whether the given number is available as possibility
+   *
+   * @param number The number to check.
+   * @return True if still available, Fals if not.
+   */
   bool IsPossible(unsigned number) const {
-    return (data_ & (1 << (number - 1))) != 0;
+    return (data_ & SingleBit(number)) != 0;
   }
 
-  // C++ 20 has popcount
+  /*! Return The number of possiblities still present.
+   *
+   * @return Number of possibilities.
+   */
   unsigned CountPossible() const {
     unsigned result = 0;
-    for (unsigned i = 1; i <= max_; i++) {
+    for (unsigned i = 1; i <= static_cast<unsigned>(max_); i++) {
       if (IsPossible(i))
         result++;
     }
     return result;
   }
 
+  /*! Returns whether only a single possibility is present.
+   *
+   * @return True if only one possibility is present, false otherwise.
+   */
   bool IsSet() const { return CountPossible() == 1; }
 
+  /*! Returns the set value.
+   *
+   * @return 0 if not set, the single possibility otherwise.
+   */
   unsigned Value() const {
     if (CountPossible() != 1)
       return 0;
-    for (unsigned i = 1; i <= max_; i++) {
+    for (unsigned i = 1; i <= static_cast<unsigned>(max_); i++) {
       if (IsPossible(i))
         return i;
     }
@@ -48,33 +81,98 @@ public:
     return 0;
   }
 
+  /*! Convenience function that returns the next possible number.
+   *
+   * @param number The starting number to search from.
+   * @return 0 if none other are possible, next possibility otherwise.
+   */
   unsigned Next(unsigned number) const {
-    for (unsigned i = number + 1; i <= max_; i++) {
+    for (unsigned i = number + 1; i <= static_cast<unsigned>(max_); i++) {
       if (IsPossible(i))
         return i;
     }
     return 0;
   }
 
+  /*! Resets the square to contain all possibilities.
+   *
+   */
   void Reset() {
-    if (data_ != ~((~0u) << max_)) {
+    if (data_ != ~((~ZERO64) << static_cast<uint64_t>(max_))) {
       changed_ = true;
     }
-    data_ = ~((~0u) << max_);
+    data_ = ~((~ZERO64) << static_cast<uint64_t>(max_));
   }
 
-  void SetToEmpty() {
-    if (data_ != 0u) {
+  /*! Resets the square to contain zero possibilities.
+   *
+   */
+  void ResetToEmpty() {
+    if (data_ != ZERO64) {
       changed_ = true;
     }
-    data_ = 0u;
+    data_ = ZERO64;
   }
 
-  void Set(unsigned number) {
-    if (data_ != (1 << (number - 1))) {
+  /*! Mark the square as not changed.
+   *
+   */
+  void ResetChanged() { changed_ = false; }
+
+  /*! Returns whether the square has changed since last ResetChanged().
+   *
+   * @return True if changed, False if not.
+   */
+  bool HasChanged() const { return changed_; }
+
+  /*! Returns whether there is a possibility intersection with the given square.
+   *
+   * @param r The square to intersect with.
+   * @return True if the squares intersect in at least one possibility. False
+   * otherwise.
+   */
+  bool HasIntersection(const Square &r) const {
+    return (data_ & r.data_) != 0;
+  }
+
+  /*! Intersect this square with another.
+   *
+   * @param r Square to intersect with.
+   * @return this
+   */
+  Square& operator &=(const Square& r) {
+    if (data_ != (data_ & r.data_)) {
       changed_ = true;
     }
-    data_ = (1 << (number - 1));
+    data_ &= r.data_;
+    return *this;
+  }
+
+  /*! Intersect this square with another.
+   *
+   * @param r Square to intersect with.
+   * @return the intersection result.
+   */
+  Square operator &(const Square& r) const {
+    Square result(*this);
+    result.data_ &= r.data_;
+    return result;
+  }
+
+  // Default assignment operator.
+  Square& operator=(const Square& r) = default;
+
+  /*! Reset the content of the square to contain only one possibility.
+   *
+   * @param number The possibility to reset to.
+   * @return this
+   */
+  Square& operator=(unsigned number) {
+    if (data_ != SingleBit(number)) {
+      changed_ = true;
+    }
+    data_ = SingleBit(number);
+    return *this;
   }
 
   /*! Add a number as a possibility.
@@ -82,11 +180,11 @@ public:
    * @param number Number to add, indexed from 1.
    * @return this
    */
-  Square<T>& operator+=(unsigned number) {
-    if (data_ != (data_ | (1 << (number - 1)))) {
+  Square& operator+=(unsigned number) {
+    if (data_ != (data_ | SingleBit(number))) {
       changed_ = true;
     }
-    data_ |= (1 << (number - 1));
+    data_ |= SingleBit(number);
     return *this;
   }
 
@@ -95,9 +193,9 @@ public:
    * @param number Number to add, indexed from 1.
    * @return A new Square with the possiblity added.
    */
-  Square<T> operator+(unsigned number) const {
-    Square<T> result(*this);
-    result.data_ |= (1 << (number - 1));
+  Square operator+(unsigned number) const {
+    Square result(*this);
+    result.data_ |= SingleBit(number);
     return result;
   }
 
@@ -106,7 +204,7 @@ public:
    * @param r Square to union with.
    * @return this
    */
-  Square<T>& operator+=(Square<T> r) {
+  Square& operator+=(Square r) {
     if (data_ != (data_ | r.data_)) {
       changed_ = true;
     }
@@ -119,8 +217,8 @@ public:
    * @param r Square to union with.
    * @return A new Square with the resulting union.
    */
-  Square<T> operator+(Square<T> r) const {
-    Square<T> result(*this);
+  Square operator+(Square r) const {
+    Square result(*this);
     result.data_ |= r.data_;
     return result;
   }
@@ -130,11 +228,11 @@ public:
    * @param number Number to remove.
    * @return this
    */
-  Square<T>& operator-=(unsigned number) {
-    if (data_ != (data_ & ~(1 << (number - 1)))) {
+  Square& operator-=(unsigned number) {
+    if (data_ != (data_ & ~SingleBit(number))) {
       changed_ = true;
     }
-    data_ &= ~(1 << (number - 1));
+    data_ &= ~SingleBit(number);
     return *this;
   }
 
@@ -143,9 +241,9 @@ public:
    * @param number Number to remove.
    * @return A new Square with the number removed.
    */
-  Square<T> operator-(unsigned number) const {
-    Square<T> result(*this);
-    result.data_ &= ~(1 << (number - 1));
+  Square operator-(unsigned number) const {
+    Square result(*this);
+    result.data_ &= ~SingleBit(number);
     return result;
   }
 
@@ -154,7 +252,7 @@ public:
    * @param r The square with posibilities to be removed.
    * @return this
    */
-  Square<T>& operator-=(Square<T> r) {
+  Square& operator-=(Square r) {
     if (data_ != (data_ & ~r.data_)) {
       changed_ = true;
     }
@@ -167,61 +265,50 @@ public:
    * @param r The square with posibilities to be removed.
    * @return A new Square with the possibilites removed.
    */
-  Square<T> operator-(Square<T> r) const {
-    Square<T> result(*this);
+  Square operator-(Square r) const {
+    Square result(*this);
     result.data_ &= ~r.data_;
     return result;
   }
 
-  void ResetChanged() { changed_ = false; }
-
-  bool HasChanged() const { return changed_; }
-
-  bool HasIntersection(const Square<T> &r) const {
-    return (data_ & r.data_) != 0;
-  }
-
-  void Intersect(const Square<T> &r) {
-    if (data_ != (data_ & r.data_)) {
-      changed_ = true;
-    }
-    data_ &= r.data_;
-  }
-
-  void DebugPrint(std::ostream &s) const {
-    // [1.3.5..8.]
-    s << "[";
-    for (size_t i = 0; i < max_; i++) {
-      if (IsPossible(i + 1)) {
-        if (i + 1 > 9) {
-          s << static_cast<char>(i - 9 + 'A');
-        } else {
-          s << i + 1;
-        }
-      } else {
-        s << ".";
-      }
-    }
-    s << "]";
-  }
+  /*! Generate a debug a string representing the possibilities in the square.
+   *
+   * @return Debug string in the following format [1..456..9] where 1,4,5,6,9
+   * are possibilities.
+   */
+  std::string DebugString() const;
 
 private:
-  void OverrideValue(T data) {
+  void OverrideValue(uint64_t data) {
     if (data != data_) {
       changed_ = true;
     }
     data_ = data;
   }
 
-  T data_;
+  static uint64_t SingleBit(unsigned number) {
+    return (static_cast<uint64_t>(1) << (static_cast<uint64_t>(number) -
+                                         static_cast<uint64_t>(1)));
+  }
+
+  uint64_t data_;
   uint8_t max_;
   bool changed_;
 
   FRIEND_TEST(BlockCheckerTest, recursive_set_find);
   FRIEND_TEST(BlockCheckerTest, recursive_number_find);
+
+  friend std::ostream& operator <<(std::ostream& s, const Square& r);
 };
 
-typedef Square<uint16_t> SquareType;
+/*! Ostream operator for sudoku square.
+ *
+ * @param s Stream to write to.
+ * @param r Square to serialize.
+ * @return stream written to
+ */
+std::ostream& operator <<(std::ostream& s, const Square& r);
+
 } // namespace sudoku
 
 #endif // SUDOKU_SQUARE_H

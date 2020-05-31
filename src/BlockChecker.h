@@ -8,8 +8,9 @@
 #include <unordered_set>
 #include <vector>
 
-typedef std::vector<::sudoku::SquareType *> SudokuBlockType;
+typedef std::vector<::sudoku::Square *> SudokuBlockType;
 
+namespace sudoku {
 class BlockChecker {
 public:
   BlockChecker(const SudokuBlockType &elements);
@@ -26,7 +27,7 @@ public:
                        std::unordered_set<size_t> &positions) const;
 
   void PruneInterection(BlockChecker &r) const;
-  const std::vector<sudoku::SquareType *> &GetSquares() const { return elem_; }
+  const std::vector<sudoku::Square *> &GetSquares() const { return elem_; }
 
 private:
   SudokuBlockType elem_;
@@ -35,15 +36,18 @@ private:
 };
 
 void recursive_set_find(std::vector<std::vector<size_t>> &result,
-                        const std::vector<sudoku::SquareType *> &squares, size_t size);
+                        const std::vector<sudoku::Square *> &squares,
+                        size_t size);
 
 void recursive_number_find(std::vector<std::vector<size_t>> &result,
-                           const std::vector<sudoku::SquareType *> &squares,
+                           const std::vector<sudoku::Square *> &squares,
                            size_t size);
 
 // TODO: write tests
 void recursive_swordfish_find(std::vector<std::vector<size_t>> &result,
                               const std::vector<BlockChecker *> &blocks,
                               size_t size, size_t number);
+
+}
 
 #endif // SUDOKU_BLOCKCHECKER_H

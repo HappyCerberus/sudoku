@@ -12,7 +12,53 @@
 
 enum SudokuTypes { BASIC = 1, DIAGONAL = 2 };
 
-typedef std::vector<std::vector<sudoku::SquareType>> SudokuDataType;
+typedef std::vector<std::vector<sudoku::Square>> SudokuDataType;
+
+namespace sudoku {
+class SudokuRow {
+public:
+  SudokuRow() = delete;
+  SudokuRow(const SudokuRow &) = default;
+  SudokuRow(SudokuRow &&) = default;
+
+  Square &operator[](size_t index) {
+    assert(index < len_);
+    return data_[index];
+  }
+  const Square &operator[](size_t index) const {
+    assert(index < len_);
+    return data_[index];
+  }
+
+private:
+  SudokuRow(Square *data, size_t len) : data_(data), len_(len) {}
+
+  Square *data_;
+  size_t len_;
+  friend class Sudoku;
+  friend class ConstSudokuRow;
+};
+
+class ConstSudokuRow {
+public:
+  ConstSudokuRow() = delete;
+  ConstSudokuRow(const ConstSudokuRow &) = default;
+  ConstSudokuRow(ConstSudokuRow &&) = default;
+  ConstSudokuRow(const SudokuRow &r) : data_(r.data_), len_(r.len_) {}
+  ConstSudokuRow(SudokuRow &&r) : data_(r.data_), len_(r.len_) {}
+
+  const Square &operator[](size_t index) const {
+    assert(index < len_);
+    return data_[index];
+  }
+
+private:
+  ConstSudokuRow(const Square *data, size_t len) : data_(data), len_(len) {}
+
+  const Square *data_;
+  size_t len_;
+  friend class Sudoku;
+};
 
 class Sudoku {
 public:
@@ -36,7 +82,18 @@ public:
   const std::vector<BlockChecker> &Blocks() const { return checks_; }
   std::vector<BlockChecker> &Blocks() { return checks_; }
 
-  SudokuDataType &data() { return data_; }
+  SudokuRow operator[](size_t index) {
+    return SudokuRow(data_[index].data(), data_[index].size());
+  }
+  ConstSudokuRow operator[](size_t index) const {
+      return ConstSudokuRow(data_[index].data(), data_[index].size());
+  }
+
+  unsigned Size() { return static_cast<unsigned>(data_.size()); }
+
+  SudokuDataType &data() {
+    return data_;
+  }
 
   const SudokuDataType &data() const { return data_; }
 
@@ -53,8 +110,6 @@ public:
     return col_checks_;
   }
 
-  size_t Size() { return size_; }
-
 private:
   std::vector<BlockChecker> checks_;
   std::vector<BlockChecker *> row_checks_;
@@ -69,7 +124,7 @@ private:
 };
 
 std::ostream &operator<<(std::ostream &s, const Sudoku &puzzle);
-
 std::istream &operator>>(std::istream &s, Sudoku &puzzle);
+}
 
 #endif // SUDOKU_SUDOKU_H

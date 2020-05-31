@@ -3,6 +3,7 @@
 #include "Sudoku.h"
 #include "gtest/gtest.h"
 
+namespace sudoku {
 TEST(SudokuTest, SetupCheckers) {
   std::string small = "4  0  0   0  0  8   0  0  3 \n"
                       "0  0  5   2  0  0   0  1  0 \n"
@@ -32,4 +33,5 @@ TEST(SudokuTest, SetupCheckers) {
                                 "to belong to 3 blocks.";
     }
   }
+}
 }

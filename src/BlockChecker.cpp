@@ -5,6 +5,8 @@
 #include <bitset>
 #include <functional>
 
+namespace sudoku {
+
 BlockChecker::BlockChecker(const SudokuBlockType &elements) : elem_(elements) {}
 
 bool BlockChecker::Check() const {
@@ -60,30 +62,31 @@ void generic_recursive_find(
 // if we pick X squares, and the number of possibilities within these squares
 // is X -> then these possibilities can't appear anywhere else in the block
 void recursive_set_find(std::vector<std::vector<size_t>> &result,
-                        const std::vector<sudoku::SquareType *> &squares, size_t size) {
-  auto check = [](const std::vector<sudoku::SquareType *> &elems,
+                        const std::vector<sudoku::Square *> &squares,
+                        size_t size) {
+  auto check = [](const std::vector<sudoku::Square *> &elems,
                   const std::vector<size_t> &set) -> bool {
-    sudoku::SquareType tmp_union(elems.size());
-    tmp_union.SetToEmpty();
+    sudoku::Square tmp_union(elems.size());
+    tmp_union.ResetToEmpty();
     for (size_t x : set) {
       tmp_union += *elems[x];
     }
     return tmp_union.CountPossible() == set.size();
   };
-  generic_recursive_find<sudoku::SquareType>(result, squares, size, check);
+  generic_recursive_find<sudoku::Square>(result, squares, size, check);
 }
 
 // if X possibilities only appear in X squares, then those squares can't
 // contain any other numbers
 void recursive_number_find(std::vector<std::vector<size_t>> &result,
-                           const std::vector<sudoku::SquareType *> &squares,
+                           const std::vector<sudoku::Square *> &squares,
                            size_t size) {
-  auto check = [](const std::vector<sudoku::SquareType *> &elems,
+  auto check = [](const std::vector<sudoku::Square *> &elems,
                   const std::vector<size_t> &set) -> bool {
-    sudoku::SquareType tmp_numbers(elems.size());
-    tmp_numbers.SetToEmpty();
+    sudoku::Square tmp_numbers(elems.size());
+    tmp_numbers.ResetToEmpty();
     for (size_t x : set) {
-      tmp_numbers += x + 1;
+      tmp_numbers += x + 1u;
     }
 
     size_t count_squares = 0;
@@ -94,7 +97,7 @@ void recursive_number_find(std::vector<std::vector<size_t>> &result,
 
     return count_squares == set.size();
   };
-  generic_recursive_find<sudoku::SquareType>(result, squares, size, check);
+  generic_recursive_find<sudoku::Square>(result, squares, size, check);
 }
 
 // swordfish: grab X number of blocks, we look at the positions of a number, if
@@ -118,14 +121,14 @@ void BlockChecker::Solve() {
     std::vector<std::vector<size_t>> result;
     recursive_number_find(result, elem_, i);
     for (size_t x = 0; x < result.size(); x++) {
-      sudoku::SquareType u(elem_.size());
-      u.SetToEmpty();
+      sudoku::Square u(elem_.size());
+      u.ResetToEmpty();
       for (size_t y = 0; y < result[x].size(); y++) {
-        u += result[x][y] + 1;
+        u += result[x][y] + 1u;
       }
       for (size_t j = 0; j < elem_.size(); j++) {
         if (elem_[j]->HasIntersection(u)) {
-          elem_[j]->Intersect(u);
+          (*elem_[j]) &= u;
         }
       }
     }
@@ -135,8 +138,8 @@ void BlockChecker::Solve() {
     std::vector<std::vector<size_t>> result;
     recursive_set_find(result, elem_, i);
     for (size_t x = 0; x < result.size(); x++) {
-      sudoku::SquareType u(elem_.size());
-      u.SetToEmpty();
+      sudoku::Square u(elem_.size());
+      u.ResetToEmpty();
       for (size_t y = 0; y < result[x].size(); y++) {
         u += *elem_[result[x][y]];
       }
@@ -154,7 +157,7 @@ void BlockChecker::Solve() {
 
 void BlockChecker::PruneInterection(BlockChecker &r) const {
   std::unordered_set<size_t> result;
-  std::unordered_set<sudoku::SquareType *> intersection;
+  std::unordered_set<sudoku::Square *> intersection;
   for (auto i : elem_) {
     for (auto j : r.elem_) {
       if (i == j)
@@ -169,7 +172,7 @@ void BlockChecker::PruneInterection(BlockChecker &r) const {
 
   for (auto i : elem_) {
     for (size_t j = 0; j < elem_.size(); j++) {
-      if (i->IsPossible(j + 1)) {
+      if (i->IsPossible(j + 1u)) {
         full_card[j]++;
       }
     }
@@ -177,7 +180,7 @@ void BlockChecker::PruneInterection(BlockChecker &r) const {
 
   for (auto i : intersection) {
     for (size_t j = 0; j < elem_.size(); j++) {
-      if (i->IsPossible(j + 1)) {
+      if (i->IsPossible(j + 1u)) {
         inter_card[j]++;
       }
     }
@@ -234,4 +237,6 @@ void BlockChecker::Prune(unsigned int number,
       continue;
     (*elem_[i]) -= number;
   }
+}
+
 }

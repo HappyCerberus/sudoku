@@ -6,8 +6,9 @@
 #include <ostream>
 #include <unordered_map>
 
+namespace sudoku {
 Sudoku::Sudoku(unsigned size, SudokuTypes type)
-    : data_(size, std::vector<sudoku::SquareType>(size, sudoku::SquareType{size})),
+    : data_(size, std::vector<sudoku::Square>(size, sudoku::Square{size})),
       block_mapping_(size, std::vector<std::vector<BlockChecker *>>(
                                size, std::vector<BlockChecker *>())),
       size_(size) {
@@ -20,7 +21,7 @@ Sudoku::Sudoku(SudokuDataType data, SudokuTypes type)
                      std::vector<std::vector<BlockChecker *>>(
                          data_.size(), std::vector<BlockChecker *>())),
       size_(data_.size()) {
-  SetupCheckers(data_.size(), type);
+  SetupCheckers(Size(), type);
 }
 
 bool Sudoku::CheckPuzzle() {
@@ -110,8 +111,7 @@ void Sudoku::Prune(size_t x, size_t y) { Prune(x, y, data_[x][y].Value()); }
 void Sudoku::DebugPrint(std::ostream &s) {
   for (size_t i = 0; i < data_.size(); i++) {
     for (size_t j = 0; j < data_[i].size(); j++) {
-      data_[i][j].DebugPrint(s);
-      s << " ";
+      s << data_[i][j] << " ";
     }
     s << std::endl;
   }
@@ -151,11 +151,11 @@ std::unordered_set<BlockChecker *> Sudoku::ChangedBlocks() const {
 std::ostream &operator<<(std::ostream &s, const Sudoku &puzzle) {
   for (size_t i = 0; i < puzzle.data().size(); i++) {
     for (size_t j = 0; j < puzzle.data()[i].size(); j++) {
-      if (puzzle.data()[i][j].Value() >= 10) {
+      if (puzzle[i][j].Value() >= 10) {
         s << std::setw(2)
-          << static_cast<char>(puzzle.data()[i][j].Value() - 10 + 'A');
+          << static_cast<char>(puzzle[i][j].Value() - 10 + 'A');
       } else {
-        s << std::setw(2) << puzzle.data()[i][j].Value();
+        s << std::setw(2) << puzzle[i][j].Value();
       }
     }
     s << std::endl;
@@ -195,10 +195,11 @@ std::istream &operator>>(std::istream &s, Sudoku &puzzle) {
         continue;
       }
       if (isalpha(c))
-        puzzle.data()[i][j].Set(c - 'A' + 10);
+        puzzle[i][j] = static_cast<unsigned>(c - 'A') + 10u;
       if (isdigit(c))
-        puzzle.data()[i][j].Set(c - '0');
+        puzzle[i][j] = static_cast<unsigned>(c - '0');
     }
   }
   return s;
+}
 }

@@ -5,26 +5,28 @@
 #include "gmock/gmock-matchers.h"
 #include "gtest/gtest.h"
 
+namespace sudoku {
+
 TEST(BlockCheckerTest, Check) {
-  std::vector<sudoku::SquareType> actual{
-      sudoku::SquareType(3), sudoku::SquareType(3), sudoku::SquareType(3)};
+  std::vector<Square> actual{Square(3u), Square(3u),
+                                     Square(3u)};
   BlockChecker blockChecker(
-      std::vector<sudoku::SquareType *>{&actual[0], &actual[1], &actual[2]});
-  actual[0].Set(1);
-  actual[1].Set(2);
-  actual[2].Set(3);
+      std::vector<Square *>{&actual[0], &actual[1], &actual[2]});
+  actual[0] = 1;
+  actual[1] = 2;
+  actual[2] = 3;
   EXPECT_TRUE(blockChecker.Check());
   actual[0].Reset();
   EXPECT_TRUE(blockChecker.Check());
-  actual[0].Set(3);
+  actual[0] = 3;
   EXPECT_FALSE(blockChecker.Check());
 }
 
 TEST(BlockCheckerTest, Prune) {
-  std::vector<sudoku::SquareType> actual{
-      sudoku::SquareType(3), sudoku::SquareType(3), sudoku::SquareType(3)};
+  std::vector<Square> actual{Square(3u), Square(3u),
+                                     Square(3u)};
   BlockChecker blockChecker(
-      std::vector<sudoku::SquareType *>{&actual[0], &actual[1], &actual[2]});
+      std::vector<Square *>{&actual[0], &actual[1], &actual[2]});
   blockChecker.Prune(1);
   blockChecker.Prune(2);
   for (size_t i = 0; i < 3; i++) {
@@ -35,18 +37,16 @@ TEST(BlockCheckerTest, Prune) {
   EXPECT_EQ(actual[0].CountPossible(), 2);
 }
 
-namespace sudoku {
-
 TEST(BlockCheckerTest, recursive_set_find) {
-  std::vector<sudoku::SquareType> data(9, sudoku::SquareType{9});
-  std::vector<sudoku::SquareType *> squares;
+  std::vector<Square> data(9, Square(9u));
+  std::vector<Square *> squares;
   for (size_t i = 0; i < data.size(); i++) {
     squares.push_back(&data[i]);
   }
 
   {
     for (size_t i = 0; i < data.size(); i++) {
-      data[i].Set(i + 1);
+      data[i] = i + 1u;
     }
     std::vector<std::vector<size_t>> result;
     recursive_set_find(result, squares, 1);
@@ -79,15 +79,15 @@ TEST(BlockCheckerTest, recursive_set_find) {
 }
 
 TEST(BlockCheckerTest, recursive_number_find) {
-  std::vector<sudoku::SquareType> data(9, sudoku::SquareType{9});
-  std::vector<sudoku::SquareType *> squares;
+  std::vector<Square> data(9, Square(9u));
+  std::vector<Square *> squares;
   for (size_t i = 0; i < data.size(); i++) {
     squares.push_back(&data[i]);
   }
 
   {
     for (size_t i = 0; i < data.size(); i++) {
-      data[i].Set(i + 1);
+      data[i] = i + 1u;
     }
     std::vector<std::vector<size_t>> result;
     recursive_number_find(result, squares, 1);
