@@ -6,9 +6,10 @@
 
 #include <chrono>
 #include <ctime>
-#include <sstream>
-#include <vector>
 #include <iostream>
+#include <sstream>
+#include <unordered_map>
+#include <vector>
 
 // Ultimate goal:
 // Sudoku generator, that understands how humans solve Sudoku.
@@ -16,7 +17,57 @@
 // - can generate from a template
 // - support all the variants of Sudoku
 
-bool solve_smart(sudoku::Sudoku &sudoku) {
+struct SolveStats {
+  std::unordered_map<unsigned, unsigned> groups;
+  unsigned block_intersections;
+  std::unordered_map<unsigned, unsigned> swordfish;
+};
+
+std::ostream& operator <<(std::ostream& s, const SolveStats& stats) {
+  s << "Solver stats {" << std::endl;
+  s << "\tGroups: ";
+  for (unsigned i = 1; i <= 4; i++) {
+    unsigned v = 0u;
+    if (stats.groups.find(i) != stats.groups.end()) {
+      v = stats.groups.at(i);
+    }
+    s << "(" << i << " : " << v << ")";
+  }
+  s << std::endl;
+  s << "\tIntersections: " << stats.block_intersections << std::endl;
+  s << "\tSwordfish: ";
+  for (unsigned i = 2; i <= 8; i++) {
+    unsigned v = 0u;
+    if (stats.swordfish.find(i) != stats.swordfish.end()) {
+      v = stats.swordfish.at(i);
+    }
+    s << "(" << i << " : " << v << ")";
+  }
+  s << std::endl;
+  s << "};" << std::endl;
+
+  return s;
+}
+
+
+bool solve_smart(sudoku::Sudoku &sudoku, SolveStats& stats) {
+  /*
+   * while (not_solved) {
+   *    while (something_changed) {
+   *      solve_for_groups();
+   *    }
+   *    solve_for_intersections();
+   *    if (something_changed) continue;
+   *
+   *    solve_for_swordfish();
+   *    if (something_changed) continue;
+   *
+   *    make_a_guess();
+   * }
+   */
+
+
+
   while (!sudoku.IsSet()) {
     auto changed_blocks = sudoku.ChangedBlocks();
     if (changed_blocks.size() == 0) {
@@ -24,25 +75,131 @@ bool solve_smart(sudoku::Sudoku &sudoku) {
     }
     sudoku.ResetChange();
 
+    // Rough difficulty scale:
+    // Group{1}
+    // Group{2}
+    // Intersections
+    // Group{3}
+    // Swordfish{2}
+    // Group{4}
+    // Swordfish{3,4,5,6,7,8,9}
+
     for (auto &block : changed_blocks) {
-      block->SolveHiddenGroups();
-      block->SolveNakedGroups();
+      block->SolveHiddenGroups(1);
+      block->SolveNakedGroups(1);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.groups[1]++;
+      continue;
+    }
+
+    for (auto &block : sudoku.Blocks()) {
+      block.SolveHiddenGroups(2);
+      block.SolveNakedGroups(2);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.groups[2]++;
+      continue;
     }
 
     // Intersecting blocks rule
-    for (auto &block : changed_blocks) {
+    for (auto &block : sudoku.Blocks()) {
       for (auto &rblock : sudoku.Blocks()) {
-        block->SolveIntersection(rblock);
+        block.SolveIntersection(rblock);
       }
     }
 
-    // Swordfish
-    for (unsigned i = 2; i <= sudoku.Size() / 2; i++) { // sizes of the
-                                                        // swordfish
-      for (unsigned j = 1; j <= sudoku.Size(); j++) {
-        sudoku.SolveSwordFish(i, j);
-      }
+    if (sudoku.HasChange()) {
+      stats.block_intersections++;
+      continue;
     }
+
+    for (auto &block : sudoku.Blocks()) {
+      block.SolveHiddenGroups(3);
+      block.SolveNakedGroups(3);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.groups[3]++;
+      continue;
+    }
+
+    for (unsigned j = 1; j <= sudoku.Size(); j++) {
+      sudoku.SolveSwordFish(2u, j);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.swordfish[2]++;
+      continue;
+    }
+
+    for (auto &block : sudoku.Blocks()) {
+      block.SolveHiddenGroups(4);
+      block.SolveNakedGroups(4);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.groups[4]++;
+      continue;
+    }
+
+    for (unsigned j = 1; j <= sudoku.Size(); j++) {
+      sudoku.SolveSwordFish(3u, j);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.swordfish[3]++;
+      continue;
+    }
+
+    for (unsigned j = 1; j <= sudoku.Size(); j++) {
+      sudoku.SolveSwordFish(4u, j);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.swordfish[4]++;
+      continue;
+    }
+
+    for (unsigned j = 1; j <= sudoku.Size(); j++) {
+      sudoku.SolveSwordFish(5u, j);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.swordfish[5]++;
+      continue;
+    }
+
+    for (unsigned j = 1; j <= sudoku.Size(); j++) {
+      sudoku.SolveSwordFish(6u, j);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.swordfish[6]++;
+      continue;
+    }
+
+    for (unsigned j = 1; j <= sudoku.Size(); j++) {
+      sudoku.SolveSwordFish(7u, j);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.swordfish[7]++;
+      continue;
+    }
+
+    for (unsigned j = 1; j <= sudoku.Size(); j++) {
+      sudoku.SolveSwordFish(8u, j);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.swordfish[8]++;
+      continue;
+    }
+
+    break;
   }
 
   return sudoku.IsSet();
@@ -102,9 +259,12 @@ int main() {
     // record start time
     auto start = std::chrono::system_clock::now();
 
-    if (!solve_smart(test)) {
+    SolveStats stats;
+    if (!solve_smart(test, stats)) {
       std::cout << "There is something very wrong!" << std::endl;
     }
+
+    std::cout << stats;
 
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> diff = end - start;
@@ -178,34 +338,18 @@ int main() {
     // record start time
     auto start = std::chrono::system_clock::now();
 
-    if (!solve_smart(test)) {
+    SolveStats stats;
+    if (!solve_smart(test, stats)) {
       std::cout << "There is something very wrong!" << std::endl;
     }
+
+    std::cout << stats;
 
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> diff = end - start;
     std::cout << "Time to smart solve 9x9 sudoku " << diff.count()
               << " "
                  "s\n";
-    std::cout << test << std::endl;
-    test.DebugPrint(std::cout);
-  }
-
-  {
-    std::stringstream stream(sudoku_16x16);
-    sudoku::Sudoku test(16);
-    stream >> test;
-
-    // record start time
-    auto start = std::chrono::system_clock::now();
-
-    if (!solve_smart(test)) {
-      std::cout << "There is something very wrong!" << std::endl;
-    }
-
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<double> diff = end - start;
-    std::cout << "Time to solve 16x16 pruned sudoku " << diff.count() << " s\n";
     std::cout << test << std::endl;
     test.DebugPrint(std::cout);
   }
