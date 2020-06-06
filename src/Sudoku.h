@@ -21,20 +21,22 @@ public:
   SudokuRow(const SudokuRow &) = default;
   SudokuRow(SudokuRow &&) = default;
 
-  Square &operator[](size_t index) {
+  Square &operator[](unsigned index) {
     assert(index < len_);
     return data_[index];
   }
-  const Square &operator[](size_t index) const {
+  const Square &operator[](unsigned index) const {
     assert(index < len_);
     return data_[index];
   }
+
+  unsigned Size() const { return len_; }
 
 private:
-  SudokuRow(Square *data, size_t len) : data_(data), len_(len) {}
+  SudokuRow(Square *data, unsigned len) : data_(data), len_(len) {}
 
   Square *data_;
-  size_t len_;
+  unsigned len_;
   friend class Sudoku;
   friend class ConstSudokuRow;
 };
@@ -47,68 +49,105 @@ public:
   ConstSudokuRow(const SudokuRow &r) : data_(r.data_), len_(r.len_) {}
   ConstSudokuRow(SudokuRow &&r) : data_(r.data_), len_(r.len_) {}
 
-  const Square &operator[](size_t index) const {
+  const Square &operator[](unsigned index) const {
     assert(index < len_);
     return data_[index];
   }
 
+  unsigned Size() const { return len_; }
+
 private:
-  ConstSudokuRow(const Square *data, size_t len) : data_(data), len_(len) {}
+  ConstSudokuRow(const Square *data, unsigned len) : data_(data), len_(len) {}
 
   const Square *data_;
-  size_t len_;
+  unsigned len_;
   friend class Sudoku;
 };
 
 class Sudoku {
 public:
+  /*! Construct an empty Sudoku of the given size and type.
+   *
+   * @param size Size of the Sudoku {9x9}, {16x16}, {25x25}.
+   * @param type BASIC or DIAGONAL
+   */
   Sudoku(unsigned size = 9, SudokuTypes type = BASIC);
 
+  /*! Construct a pre-filled Sudoku fo the given type. Size inferred from data.
+   *
+   * @param data Data to pre-fill the puzzle with.
+   * @param type BASIC or DIAGONAL.
+   */
   Sudoku(SudokuDataType data, SudokuTypes type = BASIC);
 
+  // Removed copy constructor.
   Sudoku(const Sudoku &) = delete;
-
+  // Removed move constructor.
   Sudoku(Sudoku &&) = delete;
-
+  // Removed assignment operator
   Sudoku &operator=(const Sudoku &) = delete;
-
+  // Removed move assignment operator.
   Sudoku &operator=(Sudoku &&) = delete;
 
-  bool CheckPuzzle();
+  /*! Square bracket operator to allow for 2D access.
+   *
+   * @param index Row index to return.
+   * @return A wrapper object around a row in the puzzle.
+   */
+  SudokuRow operator[](unsigned index) {
+    return SudokuRow(data_[index].data(), Size());
+  }
+  /*! Square bracket operator to allow for 2D access.
+   *
+   * @param index Row index to return.
+   * @return A const wrapper object around a row in the puzzle.
+   */
+  ConstSudokuRow operator[](unsigned index) const {
+    return ConstSudokuRow(data_[index].data(), Size());
+  }
 
+  /*! Return whether there is a changed square in the puzzle.
+   *
+   * @return True if a square was changed since last ResetChange(), false
+   *         otherwise.
+   */
   bool HasChange() const;
+  //! Reset the changed flag on all squares in the puzzle.
   void ResetChange();
+  /*! Return the set of blocks that contain changed squares.
+   *
+   * @return Set of blocks.
+   */
   std::unordered_set<BlockChecker *> ChangedBlocks() const;
+
+  //! Return the size of the Sudoku.
+  unsigned Size() const { return size_; }
+
+  //! Return a const reference to the list of blocks.
   const std::vector<BlockChecker> &Blocks() const { return checks_; }
+  //! Return a reference to the list of blocks.
   std::vector<BlockChecker> &Blocks() { return checks_; }
-
-  SudokuRow operator[](size_t index) {
-    return SudokuRow(data_[index].data(), data_[index].size());
-  }
-  ConstSudokuRow operator[](size_t index) const {
-      return ConstSudokuRow(data_[index].data(), data_[index].size());
-  }
-
-  unsigned Size() { return static_cast<unsigned>(data_.size()); }
-
-  SudokuDataType &data() {
-    return data_;
-  }
-
-  const SudokuDataType &data() const { return data_; }
-
-  void Prune(size_t x, size_t y);
-
-  void Prune(size_t x, size_t y, unsigned number);
-
-  void DebugPrint(std::ostream &s);
-
+  //! Return a const reference to the row blocks.
   const std::vector<BlockChecker *> &GetRowBlocks() const {
     return row_checks_;
   }
+  //! Return a const reference to the column blocks.
   const std::vector<BlockChecker *> &GetColBlocks() const {
     return col_checks_;
   }
+
+  //! Return first square that is not set.
+  std::pair<unsigned, unsigned> FirstUnset() const;
+  //! Return whether all squares are set.
+  bool IsSet() const;
+  //! Return whether there is any conflict in the puzzle.
+  bool HasConflict(); // TODO: return what the conflict is.
+
+  //! Debug print the puzzle (output the current possibilities for each square).
+  void DebugPrint(std::ostream &s);
+
+  //! Solve swordfish for a given size and a number.
+  void SolveSwordFish(unsigned size, unsigned number);
 
 private:
   std::vector<BlockChecker> checks_;
@@ -116,7 +155,7 @@ private:
   std::vector<BlockChecker *> col_checks_;
   SudokuDataType data_;
   std::vector<std::vector<std::vector<BlockChecker *>>> block_mapping_;
-  size_t size_;
+  unsigned size_;
 
   void SetupCheckers(unsigned size = 9, SudokuTypes type = BASIC);
 

@@ -1,5 +1,13 @@
 /* (c) 2020 RNDr. Simon Toth (happy.cerberus@gmail.com) */
 
+
+#include "Square.h"
+#include "Sudoku.h"
+
+#include <chrono>
+#include <ctime>
+#include <sstream>
+#include <vector>
 #include <iostream>
 
 // Ultimate goal:
@@ -8,67 +16,8 @@
 // - can generate from a template
 // - support all the variants of Sudoku
 
-// [DONE] Basic Solver - backtracking
-
-#include "Square.h"
-#include "Sudoku.h"
-#include <chrono>
-#include <ctime>
-#include <sstream>
-#include <vector>
-
-// Basic Sudoku 9x9
-// - rows
-// - columns
-// - blocks 3x3
-
-// Diagonal
-// - basic sudoku
-// - 2 diagonals
-
-std::pair<int, int> find_empty(const sudoku::Sudoku &sudoku) {
-  for (size_t i = 0; i < sudoku.data().size(); i++) {
-    for (size_t j = 0; j < sudoku.data()[i].size(); j++) {
-      if (!sudoku[i][j].IsSet())
-        return std::make_pair(i, j);
-    }
-  }
-  return std::make_pair(-1, -1);
-}
-
-bool puzzle_filled(const sudoku::Sudoku &sudoku) {
-  for (size_t i = 0; i < sudoku.data().size(); i++) {
-    for (size_t j = 0; j < sudoku.data()[i].size(); j++) {
-      if (!sudoku[i][j].IsSet())
-        return false;
-    }
-  }
-
-  return true;
-}
-
-bool solve_recursive(sudoku::Sudoku &sudoku) {
-  if (!sudoku.CheckPuzzle()) {
-    return false;
-  }
-  if (puzzle_filled(sudoku) && sudoku.CheckPuzzle()) {
-    return true;
-  }
-
-  auto next = find_empty(sudoku);
-  sudoku::Square original = sudoku[next.first][next.second];
-  unsigned v = 0;
-  while ((v = original.Next(v)) != 0) {
-    sudoku[next.first][next.second] = v;
-    if (solve_recursive(sudoku))
-      return true;
-  }
-  sudoku[next.first][next.second] = original;
-  return false;
-}
-
 bool solve_smart(sudoku::Sudoku &sudoku) {
-  while (!puzzle_filled(sudoku)) {
+  while (!sudoku.IsSet()) {
     auto changed_blocks = sudoku.ChangedBlocks();
     if (changed_blocks.size() == 0) {
       return false;
@@ -76,53 +25,27 @@ bool solve_smart(sudoku::Sudoku &sudoku) {
     sudoku.ResetChange();
 
     for (auto &block : changed_blocks) {
-      block->Solve();
+      block->SolveHiddenGroups();
+      block->SolveNakedGroups();
     }
 
     // Intersecting blocks rule
     for (auto &block : changed_blocks) {
       for (auto &rblock : sudoku.Blocks()) {
-        block->PruneInterection(rblock);
+        block->SolveIntersection(rblock);
       }
     }
 
     // Swordfish
-    for (size_t i = 2; i <= sudoku.Size() / 2; i++) { // sizes of the swordfish
-      for (size_t j = 1; j <= sudoku.Size(); j++) {
-        std::vector<std::vector<size_t>> result;
-        recursive_swordfish_find(result, sudoku.GetColBlocks(), i, j);
-        // process results
-        for (const auto &v : result) {
-          // the affected rows, remove number from all columns not in set
-          std::unordered_set<size_t> rows;
-          for (size_t x : v) {
-            sudoku.GetColBlocks()[x]->NumberPositions(j, rows);
-          }
-          for (auto r : rows) {
-            sudoku.GetRowBlocks()[r]->Prune(j, v);
-          }
-        }
-
-        result.clear();
-        recursive_swordfish_find(result, sudoku.GetRowBlocks(), i, j);
-        // process results
-        for (const auto &v : result) {
-          // the affected columns, remove number from all rows not in set
-          std::unordered_set<size_t> cols;
-          // figure out affected columns
-          for (size_t x : v) {
-            sudoku.GetRowBlocks()[x]->NumberPositions(j, cols);
-          }
-          // Remove the number from everywhere except the rows in set
-          for (auto r : cols) {
-            sudoku.GetColBlocks()[r]->Prune(j, v);
-          }
-        }
+    for (unsigned i = 2; i <= sudoku.Size() / 2; i++) { // sizes of the
+                                                        // swordfish
+      for (unsigned j = 1; j <= sudoku.Size(); j++) {
+        sudoku.SolveSwordFish(i, j);
       }
     }
   }
 
-  return puzzle_filled(sudoku);
+  return sudoku.IsSet();
 }
 
 // Version 7 is done
@@ -170,51 +93,6 @@ int main() {
       "*  1  *  E   *  0  5  *   *  B  7  *   *  *  9  8"
       "C  7  *  6   E  *  8  *   *  *  *  *   *  *  *  3"
       "*  *  5  A   *  *  *  B   *  E  *  8   6  *  2  *";
-
-  {
-    std::stringstream stream(sudoku_9x9);
-    sudoku::Sudoku test(9);
-    stream >> test;
-
-    // record start time
-    auto start = std::chrono::system_clock::now();
-
-    if (!solve_recursive(test)) {
-      std::cout << "There is something very wrong!" << std::endl;
-    }
-
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<double> diff = end - start;
-    std::cout << "Time to solve 9x9 un-pruned sudoku " << diff.count()
-              << " s\n";
-    std::cout << test << std::endl;
-  }
-
-  {
-    std::stringstream stream(sudoku_9x9);
-    sudoku::Sudoku test(9);
-    stream >> test;
-
-    // record start time
-    auto start = std::chrono::system_clock::now();
-
-    for (size_t i = 0; i < test.data().size(); i++) {
-      for (size_t j = 0; j < test.data()[i].size(); j++) {
-        if (!test.data()[i][j].IsSet())
-          continue;
-        test.Prune(i, j);
-      }
-    }
-
-    if (!solve_recursive(test)) {
-      std::cout << "There is something very wrong!" << std::endl;
-    }
-
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<double> diff = end - start;
-    std::cout << "Time to solve 9x9 pruned sudoku " << diff.count() << " s\n";
-    std::cout << test << std::endl;
-  }
 
   {
     std::stringstream stream(sudoku_9x9);

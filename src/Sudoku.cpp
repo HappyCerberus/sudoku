@@ -20,16 +20,16 @@ Sudoku::Sudoku(SudokuDataType data, SudokuTypes type)
       block_mapping_(data_.size(),
                      std::vector<std::vector<BlockChecker *>>(
                          data_.size(), std::vector<BlockChecker *>())),
-      size_(data_.size()) {
+      size_(static_cast<unsigned>(data_.size())) {
   SetupCheckers(Size(), type);
 }
 
-bool Sudoku::CheckPuzzle() {
+bool Sudoku::HasConflict() {
   for (const auto &check : checks_) {
-    if (!check.Check())
-      return false;
+    if (check.HasConflict())
+      return true;
   }
-  return true;
+  return false;
 }
 
 void Sudoku::SetupCheckers(unsigned int size, SudokuTypes type) {
@@ -100,25 +100,17 @@ void Sudoku::SetupCheckers(unsigned int size, SudokuTypes type) {
   }
 }
 
-void Sudoku::Prune(size_t x, size_t y, unsigned int number) {
-  for (auto *b : block_mapping_[x][y]) {
-    b->Prune(number);
-  }
-}
-
-void Sudoku::Prune(size_t x, size_t y) { Prune(x, y, data_[x][y].Value()); }
-
 void Sudoku::DebugPrint(std::ostream &s) {
-  for (size_t i = 0; i < data_.size(); i++) {
-    for (size_t j = 0; j < data_[i].size(); j++) {
+  for (unsigned i = 0; i < Size(); i++) {
+    for (unsigned j = 0; j < Size(); j++) {
       s << data_[i][j] << " ";
     }
     s << std::endl;
   }
 }
 bool Sudoku::HasChange() const {
-  for (size_t i = 0; i < data_.size(); i++) {
-    for (size_t j = 0; j < data_[i].size(); j++) {
+  for (unsigned i = 0; i < Size(); i++) {
+    for (unsigned j = 0; j < Size(); j++) {
       if (data_[i][j].HasChanged())
         return true;
     }
@@ -127,8 +119,8 @@ bool Sudoku::HasChange() const {
 }
 
 void Sudoku::ResetChange() {
-  for (size_t i = 0; i < data_.size(); i++) {
-    for (size_t j = 0; j < data_[i].size(); j++) {
+  for (unsigned i = 0; i < Size(); i++) {
+    for (unsigned j = 0; j < Size(); j++) {
       data_[i][j].ResetChanged();
     }
   }
@@ -136,8 +128,8 @@ void Sudoku::ResetChange() {
 
 std::unordered_set<BlockChecker *> Sudoku::ChangedBlocks() const {
   std::unordered_set<BlockChecker *> result;
-  for (size_t i = 0; i < data_.size(); i++) {
-    for (size_t j = 0; j < data_[i].size(); j++) {
+  for (unsigned i = 0; i < Size(); i++) {
+    for (unsigned j = 0; j < Size(); j++) {
       if (data_[i][j].HasChanged()) {
         for (auto &b : block_mapping_[i][j]) {
           result.insert(b);
@@ -148,9 +140,60 @@ std::unordered_set<BlockChecker *> Sudoku::ChangedBlocks() const {
   return result;
 }
 
+std::pair<unsigned, unsigned> Sudoku::FirstUnset() const {
+  for (unsigned i = 0; i < Size(); i++) {
+    for (unsigned j = 0; j < Size(); j++) {
+      if (!data_[i][j].IsSet())
+        return std::make_pair(i, j);
+    }
+  }
+  return std::make_pair(std::numeric_limits<unsigned>::max(), std::numeric_limits<unsigned>::max());
+}
+bool Sudoku::IsSet() const {
+  for (unsigned i = 0; i < Size(); i++) {
+    for (unsigned j = 0; j < Size(); j++) {
+      if (!data_[i][j].IsSet())
+        return false;
+    }
+  }
+  return true;
+}
+
+void Sudoku::SolveSwordFish(unsigned int size, unsigned int number) {
+  std::vector<std::vector<unsigned>> result;
+  recursive_swordfish_find(result, GetColBlocks(), size, number);
+  // process results
+  for (const auto &v : result) {
+    // the affected rows, remove number from all columns not in set
+    std::unordered_set<unsigned> rows;
+    for (size_t x : v) {
+      GetColBlocks()[x]->NumberPositions(number, rows);
+    }
+    for (auto r : rows) {
+      GetRowBlocks()[r]->Prune(number, v);
+    }
+  }
+
+  result.clear();
+  recursive_swordfish_find(result, GetRowBlocks(), size, number);
+  // process results
+  for (const auto &v : result) {
+    // the affected columns, remove number from all rows not in set
+    std::unordered_set<unsigned> cols;
+    // figure out affected columns
+    for (size_t x : v) {
+      GetRowBlocks()[x]->NumberPositions(number, cols);
+    }
+    // Remove the number from everywhere except the rows in set
+    for (auto r : cols) {
+      GetColBlocks()[r]->Prune(number, v);
+    }
+  }
+}
+
 std::ostream &operator<<(std::ostream &s, const Sudoku &puzzle) {
-  for (size_t i = 0; i < puzzle.data().size(); i++) {
-    for (size_t j = 0; j < puzzle.data()[i].size(); j++) {
+  for (unsigned i = 0; i < puzzle.Size(); i++) {
+    for (unsigned j = 0; j < puzzle.Size(); j++) {
       if (puzzle[i][j].Value() >= 10) {
         s << std::setw(2)
           << static_cast<char>(puzzle[i][j].Value() - 10 + 'A');
@@ -186,12 +229,12 @@ C  7  *  6   E  *  8  *   *  *  *  *   *  *  *  3
 *  *  5  A   *  *  *  B   *  E  *  8   6  *  2  *
 */
 std::istream &operator>>(std::istream &s, Sudoku &puzzle) {
-  for (size_t i = 0; i < puzzle.data().size(); i++) {
-    for (size_t j = 0; j < puzzle.data()[i].size(); j++) {
+  for (unsigned i = 0; i < puzzle.Size(); i++) {
+    for (unsigned j = 0; j < puzzle.Size(); j++) {
       char c;
       s >> c;
       if (c == '*' || c == '0') {
-        puzzle.data()[i][j].Reset();
+        puzzle[i][j].Reset();
         continue;
       }
       if (isalpha(c))

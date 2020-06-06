@@ -15,11 +15,11 @@ TEST(BlockCheckerTest, Check) {
   actual[0] = 1;
   actual[1] = 2;
   actual[2] = 3;
-  EXPECT_TRUE(blockChecker.Check());
+  EXPECT_FALSE(blockChecker.HasConflict());
   actual[0].Reset();
-  EXPECT_TRUE(blockChecker.Check());
+  EXPECT_FALSE(blockChecker.HasConflict());
   actual[0] = 3;
-  EXPECT_FALSE(blockChecker.Check());
+  EXPECT_TRUE(blockChecker.HasConflict());
 }
 
 TEST(BlockCheckerTest, Prune) {
@@ -40,23 +40,23 @@ TEST(BlockCheckerTest, Prune) {
 TEST(BlockCheckerTest, recursive_set_find) {
   std::vector<Square> data(9, Square(9u));
   std::vector<Square *> squares;
-  for (size_t i = 0; i < data.size(); i++) {
+  for (unsigned i = 0; i < static_cast<unsigned>(data.size()); i++) {
     squares.push_back(&data[i]);
   }
 
   {
-    for (size_t i = 0; i < data.size(); i++) {
+    for (unsigned i = 0; i < static_cast<unsigned>(data.size()); i++) {
       data[i] = i + 1u;
     }
-    std::vector<std::vector<size_t>> result;
+    std::vector<std::vector<unsigned>> result;
     recursive_set_find(result, squares, 1);
     EXPECT_EQ(result.size(), 9);
     EXPECT_THAT(result, testing::UnorderedElementsAre(
-                            std::vector<size_t>{0}, std::vector<size_t>{1},
-                            std::vector<size_t>{2}, std::vector<size_t>{3},
-                            std::vector<size_t>{4}, std::vector<size_t>{5},
-                            std::vector<size_t>{6}, std::vector<size_t>{7},
-                            std::vector<size_t>{8}));
+                            std::vector<unsigned>{0}, std::vector<unsigned>{1},
+                            std::vector<unsigned>{2}, std::vector<unsigned>{3},
+                            std::vector<unsigned>{4}, std::vector<unsigned>{5},
+                            std::vector<unsigned>{6}, std::vector<unsigned>{7},
+                            std::vector<unsigned>{8}));
   }
   {
     data[0].OverrideValue(0b11u);
@@ -68,36 +68,36 @@ TEST(BlockCheckerTest, recursive_set_find) {
     data[6].OverrideValue(0b110000000u);
     data[7].OverrideValue(0b1100000u);
     data[8].OverrideValue(0b110000000u);
-    std::vector<std::vector<size_t>> result;
-    recursive_set_find(result, squares, 2);
+    std::vector<std::vector<unsigned>> result;
+    recursive_set_find(result, squares, 2u);
     EXPECT_EQ(result.size(), 4);
     EXPECT_THAT(result,
                 testing::UnorderedElementsAre(
-                    std::vector<size_t>{0, 1}, std::vector<size_t>{3, 4},
-                    std::vector<size_t>{5, 7}, std::vector<size_t>{6, 8}));
+                    std::vector<unsigned>{0, 1}, std::vector<unsigned>{3, 4},
+                    std::vector<unsigned>{5, 7}, std::vector<unsigned>{6, 8}));
   }
 }
 
 TEST(BlockCheckerTest, recursive_number_find) {
   std::vector<Square> data(9, Square(9u));
   std::vector<Square *> squares;
-  for (size_t i = 0; i < data.size(); i++) {
+  for (unsigned i = 0; i < static_cast<unsigned>(data.size()); i++) {
     squares.push_back(&data[i]);
   }
 
   {
-    for (size_t i = 0; i < data.size(); i++) {
+    for (unsigned i = 0; i < static_cast<unsigned>(data.size()); i++) {
       data[i] = i + 1u;
     }
-    std::vector<std::vector<size_t>> result;
+    std::vector<std::vector<unsigned>> result;
     recursive_number_find(result, squares, 1);
     EXPECT_EQ(result.size(), 9);
     EXPECT_THAT(result, testing::UnorderedElementsAre(
-                            std::vector<size_t>{0}, std::vector<size_t>{1},
-                            std::vector<size_t>{2}, std::vector<size_t>{3},
-                            std::vector<size_t>{4}, std::vector<size_t>{5},
-                            std::vector<size_t>{6}, std::vector<size_t>{7},
-                            std::vector<size_t>{8}));
+                            std::vector<unsigned>{0}, std::vector<unsigned>{1},
+                            std::vector<unsigned>{2}, std::vector<unsigned>{3},
+                            std::vector<unsigned>{4}, std::vector<unsigned>{5},
+                            std::vector<unsigned>{6}, std::vector<unsigned>{7},
+                            std::vector<unsigned>{8}));
   }
   {
     data[0].OverrideValue(0b111u);
@@ -109,13 +109,13 @@ TEST(BlockCheckerTest, recursive_number_find) {
     data[6].OverrideValue(0b111100000u);
     data[7].OverrideValue(0b1100000u);
     data[8].OverrideValue(0b111100000u);
-    std::vector<std::vector<size_t>> result;
+    std::vector<std::vector<unsigned>> result;
     recursive_number_find(result, squares, 2);
     EXPECT_EQ(result.size(), 3);
     EXPECT_THAT(result,
-                testing::UnorderedElementsAre(std::vector<size_t>{0, 1},
-                                              std::vector<size_t>{3, 4},
-                                              std::vector<size_t>{7, 8}));
+                testing::UnorderedElementsAre(std::vector<unsigned>{0, 1},
+                                              std::vector<unsigned>{3, 4},
+                                              std::vector<unsigned>{7, 8}));
   }
 }
 
