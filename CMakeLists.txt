@@ -40,10 +40,9 @@ include(cmake/StaticAnalyzers.cmake)
 include(cmake/Conan.cmake)
 run_conan()
 
-if (ENABLE_TESTING)
-    enable_testing()
-    add_subdirectory(test)
-endif ()
+# Always test
+enable_testing()
+add_subdirectory(test)
 
 option(BUILD_SHARED_LIBS "Enable compilation of shared libraries" OFF)
 option(ENABLE_TESTING "Enable Test Builds" ON)
