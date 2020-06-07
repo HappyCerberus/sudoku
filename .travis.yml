@@ -1,6 +1,5 @@
 language: cpp
 
-
 install:
   - pip install --user conan cmake
 
@@ -15,7 +14,7 @@ jobs:
         - GCC_VER="9"
         - MATRIX_EVAL="CC=gcc-${GCC_VER} && CXX=g++-${GCC_VER}"
       after_script:
-        - bash <(curl -s https://codecov.io/bash) -x /usr/bin/gcov-${GCC_VER} || echo "Codecov did not collect coverage reports"
+        - bash <(curl -s https://codecov.io/bash) -x /usr/bin/gcov-${GCC_VER}
     - os: osx
       compiler: clang
       osx_image: xcode11.2
@@ -39,7 +38,7 @@ jobs:
             - g++-9
             - doxygen
       after_script:
-        - bash <(curl -s https://codecov.io/bash) -x /usr/bin/gcov-${GCC_VER} || echo "Codecov did not collect coverage reports"
+        - bash <(curl -s https://codecov.io/bash) -x /usr/bin/gcov-${GCC_VER}
     - os: linux
       dist: bionic
       compiler: clang

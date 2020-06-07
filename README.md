@@ -27,3 +27,17 @@ Previous live streams:
 * Version 6 : https://www.youtube.com/watch?v=2NGetdNAMMY
 * Version 7 : https://www.youtube.com/watch?v=Z9soPicHYlQ
 * Version 8 : https://www.youtube.com/watch?v=1BDzCkx2H3M
+
+## Current Benchmark results
+
+The following data set is used for the benchmark: https://www.kaggle.com/rohanrao/sudoku
+
+```
+Benchmark results: 	Solved 8847141 out of 9000001 requested.
+Out of the solved 0 were determined to be incorrect
+Solver stats {
+	Groups: (1 : 33324363)(2 : 51086)(3 : 559)(4 : 8)
+	Intersections: 3018938209
+	Swordfish: (2 : 1208)(3 : 130)(4 : 5)(5 : 0)(6 : 0)(7 : 0)(8 : 0)
+};
+```

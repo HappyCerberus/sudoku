@@ -24,6 +24,10 @@ struct SolveStats {
   SolveStats &operator+=(const SolveStats &stats);
 };
 
+std::ifstream &seekLines(int64_t offset, std::ifstream &f);
+void SolveOneSudoku(std::ifstream &f, int64_t line_number,
+                    SolveStats &global_stats, uint64_t &solved,
+                    uint64_t &incorrect);
 SolveStats &SolveStats::operator+=(const SolveStats &stats) {
   for (auto v : stats.groups) {
     groups[v.first] += v.second;
@@ -367,6 +371,121 @@ int simple_puzzles() {
   return 0;
 }
 
+int run_benchmark(std::ifstream& f, int64_t count) {
+  SolveStats global_stats;
+  uint64_t solved = 0;
+  uint64_t incorrect = 0;
+
+  for (int64_t i = 0; i < count; i++) {
+    SolveOneSudoku(f, i, global_stats, solved, incorrect);
+  }
+
+  std::cout << "Benchmark results: \t"
+               "Solved "
+            << solved << " out of " << count
+            << " requested.\n"
+               "Out of the solved "
+            << incorrect
+            << " were determined to be "
+               "incorrect\n";
+  std::cout << global_stats;
+
+  return 0;
+}
+void SolveOneSudoku(std::ifstream &f, int64_t line_number,
+                    SolveStats &global_stats, uint64_t &solved,
+                    uint64_t &incorrect) {
+  static std::string output;
+  output.reserve(81);
+
+  SolveStats stats;
+  sudoku::Sudoku s(9, BASIC);
+  f >> s;
+  char c;
+  f >> c;
+
+  if (c != ',')
+    std::cerr << "Expected comma after puzzle." << std::endl;
+  f >> output;
+
+  if (solve_smart(s, stats)) {
+    solved++;
+    global_stats += stats;
+    unsigned pos = 0;
+    bool correct = true;
+    for (unsigned x = 0; x < s.Size(); x++) {
+      for (unsigned y = 0; y < s.Size(); y++) {
+        if (static_cast<unsigned>(output[pos] - '0') != s[x][y].Value())
+          correct = false;
+        pos++;
+      }
+    }
+
+    if (!correct) {
+      incorrect++;
+      std::cerr << "Incorrectly solved puzzle at line " << line_number + 1
+                << std::endl;
+    }
+  }
+  output.clear();
+}
+std::ifstream &seekLines(int64_t offset, std::ifstream &f) {
+  std::string line;
+  line.reserve(256);
+  for (int64_t i = 0; i < offset; i++) {
+    if (std::getline(f, line).bad())
+      break;
+  }
+
+  if (f.bad()) {
+    std::cerr << "Unable to seek to the desired line." << std::endl;
+  }
+  return f;
+}
+
+int run_benchmark(const char *filename, int64_t offset, int64_t count) {
+  std::ifstream f(filename);
+  if (!f.is_open()) {
+    std::cerr << "Failed to open file " << filename << std::endl;
+  }
+
+  seekLines(offset + 1, f);
+  return run_benchmark(f, count);
+}
+
+int run_benchmark(const char *filename) {
+  std::ifstream f(filename);
+  if (!f.is_open()) {
+    std::cerr << "Failed to open file " << filename << std::endl;
+  }
+
+  SolveStats global_stats;
+  uint64_t solved = 0;
+  uint64_t incorrect = 0;
+
+  seekLines(1, f);
+  int64_t line = 1;
+  while (!f.bad() && !f.eof()) {
+    SolveOneSudoku(f, line, global_stats, solved, incorrect);
+    line++;
+    if (line%1000 == 0) {
+      std::cout << "At line " << line << std::endl;
+    }
+  }
+
+  std::cout << "Benchmark results: \t"
+               "Solved "
+            << solved << " out of " << line-1 <<
+            " requested.\n"
+               "Out of the solved "
+            << incorrect
+            << " were determined to be "
+               "incorrect\n";
+  std::cout << global_stats;
+
+  return 0;
+}
+
 int run_benchmark(const char *filename, const char *offset,
                   const char *puzzle_count) {
   char *end = nullptr;
@@ -381,78 +500,17 @@ int run_benchmark(const char *filename, const char *offset,
     std::cerr << "Unable to interpret puzzle count as number." << std::endl;
     return 1;
   }
-  std::ifstream f(filename);
-  if (!f.is_open()) {
-    std::cerr << "Failed to open file " << filename << std::endl;
-  }
 
-  std::string line;
-  line.reserve(256);
-  for (int64_t i = 0; i <= off; i++) {
-    if (getline(f, line).bad())
-      break;
-  }
-
-  if (f.bad()) {
-    std::cerr << "Unable to seek to the desired line." << std::endl;
-  }
-
-  SolveStats global_stats;
-  uint64_t solved = 0;
-  uint64_t incorrect = 0;
-
-  std::string output;
-  output.reserve(81);
-
-  for (int64_t i = 0; i < cnt; i++) {
-    SolveStats stats;
-    sudoku::Sudoku s(9, BASIC);
-    f >> s;
-    char c;
-    f >> c;
-
-    if (c != ',')
-      std::cerr << "Expected comma after puzzle." << std::endl;
-    f >> output;
-
-    if (solve_smart(s, stats)) {
-      solved++;
-      global_stats += stats;
-      unsigned pos = 0;
-      bool correct = true;
-      for (unsigned x = 0; x < s.Size(); x++) {
-        for (unsigned y = 0; y < s.Size(); y++) {
-          if (static_cast<unsigned>(output[pos] - '0') != s[x][y].Value())
-            correct = false;
-          pos++;
-        }
-      }
-
-      if (!correct) {
-        incorrect++;
-        std::cerr << "Incorrectly solved puzzle at line " << i + off + 1
-                  << std::endl;
-      }
-    }
-    output.clear();
-  }
-
-  std::cout << "Benchmark results: \t"
-               "Solved "
-            << solved << " out of " << cnt
-            << " requested.\n"
-               "Out of the solved "
-            << incorrect
-            << " were determined to be "
-               "incorrect\n";
-  std::cout << global_stats;
-
-  return 0;
+  return run_benchmark(filename, off, cnt);
 }
 
 int main(int argc, char *argv[]) {
   if (argc == 1) {
     return simple_puzzles();
+  }
+
+  if (argc == 2) {
+    return run_benchmark(argv[1]);
   }
 
   // filename offset count
@@ -464,6 +522,7 @@ int main(int argc, char *argv[]) {
                "Either call with no parameters, or specify a benchmark file, "
                "offset and number of files to process.\n"
                "./sudoku\n"
+               "./sudoku file.csv\n"
                "./sudoku file.csv 0 1000\n"
             << std::endl;
 }
