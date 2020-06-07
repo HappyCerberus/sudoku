@@ -25,7 +25,7 @@ std::string Square::DebugString() const {
   return s.str();
 }
 
-std::ostream& operator <<(std::ostream& s, const Square& r) {
+std::ostream &operator<<(std::ostream &s, const Square &r) {
   s << "[";
   for (unsigned i = 0; i < r.max_; i++) {
     if (r.IsPossible(i + 1)) {
@@ -42,4 +42,4 @@ std::ostream& operator <<(std::ostream& s, const Square& r) {
   return s;
 }
 
-}
+} // namespace sudoku

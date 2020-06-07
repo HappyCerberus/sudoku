@@ -42,7 +42,8 @@ void BlockChecker::Prune(unsigned int number,
   }
 }
 
-std::unordered_set<unsigned> BlockChecker::NumberPositions(unsigned number) const {
+std::unordered_set<unsigned>
+BlockChecker::NumberPositions(unsigned number) const {
   std::unordered_set<unsigned> positions;
   NumberPositions(number, positions);
   return positions;
@@ -110,7 +111,6 @@ void BlockChecker::SolveIntersection(BlockChecker &r) const {
   }
 }
 
-
 template <typename T>
 void generic_recursive_find(
     std::vector<std::vector<unsigned>> &result, const std::vector<T *> &elems,
@@ -118,7 +118,8 @@ void generic_recursive_find(
     const std::function<bool(const std::vector<T *> &,
                              const std::vector<unsigned> &)> &is_valid_set,
     unsigned consumed, std::vector<unsigned> path, unsigned first_index) {
-  for (unsigned i = first_index; i < elems.size() - (size - consumed - 1); i++) {
+  for (unsigned i = first_index; i < elems.size() - (size - consumed - 1);
+       i++) {
     if ((size - consumed) == 1) {
       std::vector<unsigned> r = path;
       r.push_back(i);
@@ -202,7 +203,7 @@ void recursive_swordfish_find(std::vector<std::vector<unsigned>> &result,
 }
 
 void BlockChecker::SolveNakedGroups() const {
-  for (unsigned i = 2; i <= Size()/2; i++) {
+  for (unsigned i = 2; i <= Size() / 2; i++) {
     SolveNakedGroups(i);
   }
 }
@@ -227,7 +228,7 @@ void BlockChecker::SolveNakedGroups(unsigned size) const {
   }
 }
 void BlockChecker::SolveHiddenGroups() const {
-  for (unsigned i = 1; i < Size()/2; i++) {
+  for (unsigned i = 1; i < Size() / 2; i++) {
     SolveHiddenGroups(i);
   }
 }

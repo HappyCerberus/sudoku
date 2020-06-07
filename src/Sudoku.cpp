@@ -147,7 +147,8 @@ std::pair<unsigned, unsigned> Sudoku::FirstUnset() const {
         return std::make_pair(i, j);
     }
   }
-  return std::make_pair(std::numeric_limits<unsigned>::max(), std::numeric_limits<unsigned>::max());
+  return std::make_pair(std::numeric_limits<unsigned>::max(),
+                        std::numeric_limits<unsigned>::max());
 }
 bool Sudoku::IsSet() const {
   for (unsigned i = 0; i < Size(); i++) {
@@ -195,8 +196,7 @@ std::ostream &operator<<(std::ostream &s, const Sudoku &puzzle) {
   for (unsigned i = 0; i < puzzle.Size(); i++) {
     for (unsigned j = 0; j < puzzle.Size(); j++) {
       if (puzzle[i][j].Value() >= 10) {
-        s << std::setw(2)
-          << static_cast<char>(puzzle[i][j].Value() - 10 + 'A');
+        s << std::setw(2) << static_cast<char>(puzzle[i][j].Value() - 10 + 'A');
       } else {
         s << std::setw(2) << puzzle[i][j].Value();
       }
@@ -245,4 +245,4 @@ std::istream &operator>>(std::istream &s, Sudoku &puzzle) {
   }
   return s;
 }
-}
+} // namespace sudoku

@@ -1,11 +1,11 @@
 /* (c) 2020 RNDr. Simon Toth (happy.cerberus@gmail.com) */
 
-
 #include "Square.h"
 #include "Sudoku.h"
 
 #include <chrono>
 #include <ctime>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <unordered_map>
@@ -21,9 +21,22 @@ struct SolveStats {
   std::unordered_map<unsigned, unsigned> groups;
   unsigned block_intersections;
   std::unordered_map<unsigned, unsigned> swordfish;
+  SolveStats &operator+=(const SolveStats &stats);
 };
 
-std::ostream& operator <<(std::ostream& s, const SolveStats& stats) {
+SolveStats &SolveStats::operator+=(const SolveStats &stats) {
+  for (auto v : stats.groups) {
+    groups[v.first] += v.second;
+  }
+  block_intersections += stats.block_intersections;
+  for (auto v : stats.swordfish) {
+    swordfish[v.first] += v.second;
+  }
+
+  return *this;
+}
+
+std::ostream &operator<<(std::ostream &s, const SolveStats &stats) {
   s << "Solver stats {" << std::endl;
   s << "\tGroups: ";
   for (unsigned i = 1; i <= 4; i++) {
@@ -49,8 +62,7 @@ std::ostream& operator <<(std::ostream& s, const SolveStats& stats) {
   return s;
 }
 
-
-bool solve_smart(sudoku::Sudoku &sudoku, SolveStats& stats) {
+bool solve_smart(sudoku::Sudoku &sudoku, SolveStats &stats) {
   /*
    * while (not_solved) {
    *    while (something_changed) {
@@ -65,8 +77,6 @@ bool solve_smart(sudoku::Sudoku &sudoku, SolveStats& stats) {
    *    make_a_guess();
    * }
    */
-
-
 
   while (!sudoku.IsSet()) {
     auto changed_blocks = sudoku.ChangedBlocks();
@@ -219,7 +229,7 @@ bool solve_smart(sudoku::Sudoku &sudoku, SolveStats& stats) {
 //   solving (this would help testing)
 // - cleanup interface on BlockChecker & Sudoku
 
-int main() {
+int simple_puzzles() {
 
   std::string sudoku_9x9 = "4  0  0   0  0  8   0  0  3 \n"
                            "0  0  5   2  0  0   0  1  0 \n"
@@ -355,4 +365,105 @@ int main() {
   }
 
   return 0;
+}
+
+int run_benchmark(const char *filename, const char *offset,
+                  const char *puzzle_count) {
+  char *end = nullptr;
+  int64_t off = strtoll(offset, &end, 10);
+  if (end == nullptr || *end != '\0') {
+    std::cerr << "Unable to interpret offset as number." << std::endl;
+    return 1;
+  }
+  end = nullptr;
+  int64_t cnt = strtoll(puzzle_count, &end, 10);
+  if (end == nullptr || *end != '\0') {
+    std::cerr << "Unable to interpret puzzle count as number." << std::endl;
+    return 1;
+  }
+  std::ifstream f(filename);
+  if (!f.is_open()) {
+    std::cerr << "Failed to open file " << filename << std::endl;
+  }
+
+  std::string line;
+  line.reserve(256);
+  for (int64_t i = 0; i <= off; i++) {
+    if (getline(f, line).bad())
+      break;
+  }
+
+  if (f.bad()) {
+    std::cerr << "Unable to seek to the desired line." << std::endl;
+  }
+
+  SolveStats global_stats;
+  uint64_t solved = 0;
+  uint64_t incorrect = 0;
+
+  std::string output;
+  output.reserve(81);
+
+  for (int64_t i = 0; i < cnt; i++) {
+    SolveStats stats;
+    sudoku::Sudoku s(9, BASIC);
+    f >> s;
+    char c;
+    f >> c;
+
+    if (c != ',')
+      std::cerr << "Expected comma after puzzle." << std::endl;
+    f >> output;
+
+    if (solve_smart(s, stats)) {
+      solved++;
+      global_stats += stats;
+      unsigned pos = 0;
+      bool correct = true;
+      for (unsigned x = 0; x < s.Size(); x++) {
+        for (unsigned y = 0; y < s.Size(); y++) {
+          if (static_cast<unsigned>(output[pos] - '0') != s[x][y].Value())
+            correct = false;
+          pos++;
+        }
+      }
+
+      if (!correct) {
+        incorrect++;
+        std::cerr << "Incorrectly solved puzzle at line " << i + off + 1
+                  << std::endl;
+      }
+    }
+    output.clear();
+  }
+
+  std::cout << "Benchmark results: \t"
+               "Solved "
+            << solved << " out of " << cnt
+            << " requested.\n"
+               "Out of the solved "
+            << incorrect
+            << " were determined to be "
+               "incorrect\n";
+  std::cout << global_stats;
+
+  return 0;
+}
+
+int main(int argc, char *argv[]) {
+  if (argc == 1) {
+    return simple_puzzles();
+  }
+
+  // filename offset count
+  if (argc == 4) {
+    return run_benchmark(argv[1], argv[2], argv[3]);
+  }
+
+  std::cerr << "Unexpected number of parameters for sudoku.\n"
+               "Either call with no parameters, or specify a benchmark file, "
+               "offset and number of files to process.\n"
+               "./sudoku\n"
+               "./sudoku file.csv 0 1000\n"
+            << std::endl;
 }

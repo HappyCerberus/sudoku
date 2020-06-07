@@ -3,32 +3,32 @@
 #ifndef SUDOKU_SQUARE_H
 #define SUDOKU_SQUARE_H
 
-#include "gtest/gtest_prod.h"
+//#include "gtest/gtest_prod.h"
+#include <cassert>
 #include <cstdint>
 #include <iosfwd>
-#include <vector>
 #include <string>
-#include <cassert>
+#include <vector>
 
 namespace sudoku {
 class Square {
   static const constexpr uint64_t ZERO64 = 0;
+
 public:
   // No default constructor.
   Square() = delete;
   // Default copy constructor.
-  Square(const Square& r) = default;
+  Square(const Square &r) = default;
   // Default move constructor.
-  Square(Square&& r) = default;
+  Square(Square &&r) = default;
 
   /*! Construct a square with all possibilities present
    *
    * @param max_value Maximum number to support {9, 16, 25, 36, 49, 64}
    */
   explicit Square(unsigned max_value = 9)
-      : data_(~((~ZERO64) << static_cast<uint64_t>(max_value))), max_
-              (static_cast<uint8_t>(max_value)),
-        changed_(true) {
+      : data_(~((~ZERO64) << static_cast<uint64_t>(max_value))),
+        max_(static_cast<uint8_t>(max_value)), changed_(true) {
     assert(max_value <= 64);
   }
 
@@ -36,8 +36,8 @@ public:
    *
    * @param max_value Maximum number to support {9, 16, 25, 36, 49, 64}
    */
-  explicit Square(size_t max_value = 9) : Square(static_cast<unsigned>
-                                                 (max_value)) {};
+  explicit Square(size_t max_value = 9)
+      : Square(static_cast<unsigned>(max_value)){};
 
   /*! Return whether the given number is available as possibility
    *
@@ -132,16 +132,14 @@ public:
    * @return True if the squares intersect in at least one possibility. False
    * otherwise.
    */
-  bool HasIntersection(const Square &r) const {
-    return (data_ & r.data_) != 0;
-  }
+  bool HasIntersection(const Square &r) const { return (data_ & r.data_) != 0; }
 
   /*! Intersect this square with another.
    *
    * @param r Square to intersect with.
    * @return this
    */
-  Square& operator &=(const Square& r) {
+  Square &operator&=(const Square &r) {
     if (data_ != (data_ & r.data_)) {
       changed_ = true;
     }
@@ -154,21 +152,21 @@ public:
    * @param r Square to intersect with.
    * @return the intersection result.
    */
-  Square operator &(const Square& r) const {
+  Square operator&(const Square &r) const {
     Square result(*this);
     result.data_ &= r.data_;
     return result;
   }
 
   // Default assignment operator.
-  Square& operator=(const Square& r) = default;
+  Square &operator=(const Square &r) = default;
 
   /*! Reset the content of the square to contain only one possibility.
    *
    * @param number The possibility to reset to.
    * @return this
    */
-  Square& operator=(unsigned number) {
+  Square &operator=(unsigned number) {
     if (data_ != SingleBit(number)) {
       changed_ = true;
     }
@@ -181,7 +179,7 @@ public:
    * @param number Number to add, indexed from 1.
    * @return this
    */
-  Square& operator+=(unsigned number) {
+  Square &operator+=(unsigned number) {
     if (data_ != (data_ | SingleBit(number))) {
       changed_ = true;
     }
@@ -205,7 +203,7 @@ public:
    * @param r Square to union with.
    * @return this
    */
-  Square& operator+=(Square r) {
+  Square &operator+=(Square r) {
     if (data_ != (data_ | r.data_)) {
       changed_ = true;
     }
@@ -229,7 +227,7 @@ public:
    * @param number Number to remove.
    * @return this
    */
-  Square& operator-=(unsigned number) {
+  Square &operator-=(unsigned number) {
     if (data_ != (data_ & ~SingleBit(number))) {
       changed_ = true;
     }
@@ -253,7 +251,7 @@ public:
    * @param r The square with posibilities to be removed.
    * @return this
    */
-  Square& operator-=(Square r) {
+  Square &operator-=(Square r) {
     if (data_ != (data_ & ~r.data_)) {
       changed_ = true;
     }
@@ -288,18 +286,20 @@ private:
   }
 
   static uint64_t SingleBit(unsigned number) {
-    return (static_cast<uint64_t>(1) << (static_cast<uint64_t>(number) -
-                                         static_cast<uint64_t>(1)));
+    return (static_cast<uint64_t>(1)
+            << (static_cast<uint64_t>(number) - static_cast<uint64_t>(1)));
   }
 
   uint64_t data_;
   uint8_t max_;
   bool changed_;
 
-  FRIEND_TEST(BlockCheckerTest, recursive_set_find);
-  FRIEND_TEST(BlockCheckerTest, recursive_number_find);
+  friend void TestOverrideValue(Square &, uint64_t);
 
-  friend std::ostream& operator <<(std::ostream& s, const Square& r);
+  // FRIEND_TEST(BlockCheckerTest, recursive_set_find);
+  // FRIEND_TEST(BlockCheckerTest, recursive_number_find);
+
+  friend std::ostream &operator<<(std::ostream &s, const Square &r);
 };
 
 /*! Ostream operator for sudoku square.
@@ -308,7 +308,7 @@ private:
  * @param r Square to serialize.
  * @return stream written to
  */
-std::ostream& operator <<(std::ostream& s, const Square& r);
+std::ostream &operator<<(std::ostream &s, const Square &r);
 
 } // namespace sudoku
 

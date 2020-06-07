@@ -1,10 +1,19 @@
 /* (c) 2020 RNDr. Simon Toth (happy.cerberus@gmail.com) */
 
-#include "Sudoku.h"
-#include "gtest/gtest.h"
+#include "../src/Sudoku.h"
+#include <catch2/catch.hpp>
+#include <sstream>
 
 namespace sudoku {
-TEST(SudokuTest, SetupCheckers) {
+
+std::vector<std::vector<std::vector<BlockChecker *>>> &
+TestGetMappings(Sudoku &s) {
+  return s.block_mapping_;
+}
+
+SudokuBlockType &TestGetBlockData(BlockChecker &s) { return s.elem_; }
+
+TEST_CASE("Sudoku : Test Checkers", "") {
   std::string small = "4  0  0   0  0  8   0  0  3 \n"
                       "0  0  5   2  0  0   0  1  0 \n"
                       "0  6  0   0  0  9   0  0  0 \n"
@@ -20,18 +29,17 @@ TEST(SudokuTest, SetupCheckers) {
   Sudoku test3(9);
   stream >> test3;
 
-  ASSERT_EQ(test3.block_mapping_[0][1].size(), 3);
+  REQUIRE(TestGetMappings(test3)[0][1].size() == 3);
 
-  auto it = test3.block_mapping_[0][1].begin();
-  for (size_t j = 0; j < test3.data_[0].size(); j++) {
-    EXPECT_EQ(&test3.data_[0][j], (*it)->elem_[j]);
+  auto it = TestGetMappings(test3)[0][1].begin();
+  for (unsigned j = 0; j < test3[0].Size(); j++) {
+    REQUIRE(&test3[0][j] == TestGetBlockData(**it)[j]);
   }
 
-  for (auto &i : test3.block_mapping_) {
+  for (auto &i : TestGetMappings(test3)) {
     for (auto &j : i) {
-      EXPECT_EQ(j.size(), 3) << "For a normal Sudoku we expect every square "
-                                "to belong to 3 blocks.";
+      REQUIRE(j.size() == 3);
     }
   }
 }
-}
+} // namespace sudoku

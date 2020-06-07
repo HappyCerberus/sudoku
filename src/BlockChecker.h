@@ -3,7 +3,6 @@
 #define SUDOKU_BLOCKCHECKER_H
 
 #include "Square.h"
-#include "gtest/gtest_prod.h"
 #include <cstdint>
 #include <unordered_set>
 #include <vector>
@@ -90,7 +89,7 @@ public:
 private:
   SudokuBlockType elem_;
 
-  FRIEND_TEST(SudokuTest, SetupCheckers);
+  friend SudokuBlockType &TestGetBlockData(BlockChecker &s);
 };
 
 void recursive_set_find(std::vector<std::vector<unsigned>> &result,
@@ -106,6 +105,6 @@ void recursive_swordfish_find(std::vector<std::vector<unsigned>> &result,
                               const std::vector<BlockChecker *> &blocks,
                               unsigned size, unsigned number);
 
-}
+} // namespace sudoku
 
 #endif // SUDOKU_BLOCKCHECKER_H

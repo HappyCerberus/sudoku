@@ -4,7 +4,6 @@
 
 #include "BlockChecker.h"
 #include "Square.h"
-#include "gtest/gtest_prod.h"
 #include <cstdint>
 #include <iosfwd>
 #include <unordered_set>
@@ -159,11 +158,12 @@ private:
 
   void SetupCheckers(unsigned size = 9, SudokuTypes type = BASIC);
 
-  FRIEND_TEST(SudokuTest, SetupCheckers);
+  friend std::vector<std::vector<std::vector<BlockChecker *>>> &
+  TestGetMappings(Sudoku &s);
 };
 
 std::ostream &operator<<(std::ostream &s, const Sudoku &puzzle);
 std::istream &operator>>(std::istream &s, Sudoku &puzzle);
-}
+} // namespace sudoku
 
 #endif // SUDOKU_SUDOKU_H
