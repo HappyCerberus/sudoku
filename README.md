@@ -27,6 +27,7 @@ Previous live streams:
 * Version 6 : https://www.youtube.com/watch?v=2NGetdNAMMY
 * Version 7 : https://www.youtube.com/watch?v=Z9soPicHYlQ
 * Version 8 : https://www.youtube.com/watch?v=1BDzCkx2H3M
+* Version 9 : https://www.youtube.com/watch?v=tTQywLiZ9sk
 
 ## Current Benchmark results
 

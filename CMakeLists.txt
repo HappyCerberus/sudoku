@@ -50,4 +50,3 @@ option(ENABLE_TESTING "Enable Test Builds" ON)
 option(ENABLE_FUZZING "Enable Fuzzing Builds" OFF)
 
 add_subdirectory(src)
-
