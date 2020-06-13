@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <ostream>
 #include <unordered_map>
+#include <iostream>
 
 namespace sudoku {
 Sudoku::Sudoku(unsigned size, SudokuTypes type)
@@ -160,9 +161,9 @@ bool Sudoku::IsSet() const {
   return true;
 }
 
-void Sudoku::SolveSwordFish(unsigned int size, unsigned int number) {
+void Sudoku::SolveFish(unsigned int size, unsigned int number) {
   std::vector<std::vector<unsigned>> result;
-  recursive_swordfish_find(result, GetColBlocks(), size, number);
+  recursive_fish_find(result, GetColBlocks(), size, number);
   // process results
   for (const auto &v : result) {
     // the affected rows, remove number from all columns not in set
@@ -176,7 +177,7 @@ void Sudoku::SolveSwordFish(unsigned int size, unsigned int number) {
   }
 
   result.clear();
-  recursive_swordfish_find(result, GetRowBlocks(), size, number);
+  recursive_fish_find(result, GetRowBlocks(), size, number);
   // process results
   for (const auto &v : result) {
     // the affected columns, remove number from all rows not in set
@@ -190,6 +191,117 @@ void Sudoku::SolveSwordFish(unsigned int size, unsigned int number) {
       GetColBlocks()[r]->Prune(number, v);
     }
   }
+}
+
+std::pair<unsigned,unsigned> Sudoku::GetFin(const std::vector<BlockChecker *>
+    &blocks,
+                        const std::vector<unsigned int> &set,
+                        unsigned number) const {
+  std::unordered_map<unsigned, std::pair<unsigned, std::pair<unsigned,
+      unsigned>>> freq;
+  for (unsigned i : set) {
+    auto pos = blocks[i]->NumberPositions(number);
+    for (unsigned j : pos) {
+      freq[j].first++;
+      freq[j].second.first = i;
+      freq[j].second.second = j;
+    }
+  }
+
+  for (auto i : freq) {
+    if (i.second.first == 1)
+      return i.second.second;
+  }
+  return std::make_pair(std::numeric_limits<unsigned>::max(),
+                   std::numeric_limits<unsigned>::max());
+}
+
+void Sudoku::SolveFinnedFish(unsigned int size, unsigned int number) {
+  std::vector<std::vector<unsigned>> result;
+  recursive_finned_fish_find(result, GetColBlocks(), size, number);
+  // process results
+  for (const auto &v : result) {
+    // Each of the results is a potential finned fish.
+    // We need to find the fin, and check if it is an actual fin or fake one.
+    // If it is an actual fin, try to prune the potential positions shared
+    // between the fish and the fin.
+
+    // this is a true or a fake fin
+    auto fin = GetFin(GetColBlocks(), v, number);
+
+    // this is a true or a fake fin
+    if (fin.first == std::numeric_limits<unsigned>::max()) {
+      DebugPrint(std::cerr);
+    }
+    assert(fin.first != std::numeric_limits<unsigned>::max());
+    auto pos = GetColBlocks()[fin.first]->NumberPositions(number);
+    for (auto j : pos) {
+      if (j == fin.second)
+        continue;
+      if (NumberOfSharedBlocks(std::make_pair(fin.second, fin.first),
+                               std::make_pair(j, fin.first)) > 1) {
+        for (unsigned k = 0; k < Size(); k++) {
+          if (k == fin.first)
+            continue;
+          if (NumberOfSharedBlocks(std::make_pair(fin.second, fin.first),
+                                   std::make_pair(j, k)) >= 1) {
+            data_[j][k] -= number;
+          }
+        }
+      }
+    }
+  }
+
+  result.clear();
+  recursive_finned_fish_find(result, GetRowBlocks(), size, number);
+  // process results
+  for (const auto &v : result) {
+    // Each of the results is a potential finned fish.
+    // We need to find the fin, and check if it is an actual fin or fake one.
+    // If it is an actual fin, try to prune the potential positions shared
+    // between the fish and the fin.
+
+
+    // this is a true or a fake fin
+    auto fin = GetFin(GetRowBlocks(), v, number);
+
+    // this is a true or a fake fin
+    assert(fin.first != std::numeric_limits<unsigned>::max());
+    auto pos = GetRowBlocks()[fin.first]->NumberPositions(number);
+    for (auto j : pos) {
+      if (j == fin.second)
+        continue;
+      if (NumberOfSharedBlocks(std::make_pair(fin.first, fin.second),
+                               std::make_pair(fin.first, j)) > 1) {
+        for (unsigned k = 0; k < Size(); k++) {
+          if (k == fin.first)
+            continue;
+          if (NumberOfSharedBlocks(std::make_pair(fin.first, fin.second),
+                                   std::make_pair(k, j)) >= 1) {
+            data_[k][j] -= number;
+          }
+        }
+      }
+    }
+  }
+}
+
+template <typename T>
+unsigned CountIntersections(const std::vector<T>& l, const std::vector<T>& r) {
+  unsigned count = 0;
+  for (auto &li : l) {
+    for (auto &lr : r) {
+      if (li == lr) count++;
+    }
+  }
+  return count;
+}
+
+unsigned Sudoku::NumberOfSharedBlocks(std::pair<unsigned int, unsigned int> l,
+                                      std::pair<unsigned int, unsigned int>
+                                          r) const {
+  return CountIntersections(block_mapping_[l.first][l.second],
+block_mapping_[r.first][r.second]);
 }
 
 std::ostream &operator<<(std::ostream &s, const Sudoku &puzzle) {

@@ -56,6 +56,13 @@ public:
   void NumberPositions(unsigned number,
                        std::unordered_set<unsigned> &positions) const;
 
+  /*! Determine whether this block has the number at a given position.
+   *
+   * @param number Number to search for.
+   * @param position Position to check.
+   */
+   bool HasNumberAtPosition(unsigned number, unsigned position) const;
+
   /*! Return the size of the block.
    *
    * @return Size of the block.
@@ -101,9 +108,13 @@ void recursive_number_find(std::vector<std::vector<unsigned>> &result,
                            unsigned size);
 
 // TODO: write tests
-void recursive_swordfish_find(std::vector<std::vector<unsigned>> &result,
+void recursive_fish_find(std::vector<std::vector<unsigned>> &result,
                               const std::vector<BlockChecker *> &blocks,
                               unsigned size, unsigned number);
+
+void recursive_finned_fish_find(std::vector<std::vector<unsigned>> &result,
+                                const std::vector<BlockChecker *> &blocks,
+                                unsigned size, unsigned number);
 
 } // namespace sudoku
 

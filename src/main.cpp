@@ -1,5 +1,6 @@
 /* (c) 2020 RNDr. Simon Toth (happy.cerberus@gmail.com) */
 
+#include "SolveStats.h"
 #include "Square.h"
 #include "Sudoku.h"
 
@@ -17,54 +18,10 @@
 // - can generate from a template
 // - support all the variants of Sudoku
 
-struct SolveStats {
-  std::unordered_map<unsigned, unsigned> groups;
-  unsigned block_intersections;
-  std::unordered_map<unsigned, unsigned> swordfish;
-  SolveStats &operator+=(const SolveStats &stats);
-};
-
 std::ifstream &seekLines(int64_t offset, std::ifstream &f);
 void SolveOneSudoku(std::ifstream &f, int64_t line_number,
                     SolveStats &global_stats, uint64_t &solved,
                     uint64_t &incorrect);
-SolveStats &SolveStats::operator+=(const SolveStats &stats) {
-  for (auto v : stats.groups) {
-    groups[v.first] += v.second;
-  }
-  block_intersections += stats.block_intersections;
-  for (auto v : stats.swordfish) {
-    swordfish[v.first] += v.second;
-  }
-
-  return *this;
-}
-
-std::ostream &operator<<(std::ostream &s, const SolveStats &stats) {
-  s << "Solver stats {" << std::endl;
-  s << "\tGroups: ";
-  for (unsigned i = 1; i <= 4; i++) {
-    unsigned v = 0u;
-    if (stats.groups.find(i) != stats.groups.end()) {
-      v = stats.groups.at(i);
-    }
-    s << "(" << i << " : " << v << ")";
-  }
-  s << std::endl;
-  s << "\tIntersections: " << stats.block_intersections << std::endl;
-  s << "\tSwordfish: ";
-  for (unsigned i = 2; i <= 8; i++) {
-    unsigned v = 0u;
-    if (stats.swordfish.find(i) != stats.swordfish.end()) {
-      v = stats.swordfish.at(i);
-    }
-    s << "(" << i << " : " << v << ")";
-  }
-  s << std::endl;
-  s << "};" << std::endl;
-
-  return s;
-}
 
 bool solve_smart(sudoku::Sudoku &sudoku, SolveStats &stats) {
   /*
@@ -141,11 +98,11 @@ bool solve_smart(sudoku::Sudoku &sudoku, SolveStats &stats) {
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
-      sudoku.SolveSwordFish(2u, j);
+      sudoku.SolveFish(2u, j);
     }
 
     if (sudoku.HasChange()) {
-      stats.swordfish[2]++;
+      stats.fish[2]++;
       continue;
     }
 
@@ -160,56 +117,101 @@ bool solve_smart(sudoku::Sudoku &sudoku, SolveStats &stats) {
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
-      sudoku.SolveSwordFish(3u, j);
+      sudoku.SolveFish(3u, j);
     }
 
     if (sudoku.HasChange()) {
-      stats.swordfish[3]++;
+      stats.fish[3]++;
       continue;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
-      sudoku.SolveSwordFish(4u, j);
+      sudoku.SolveFinnedFish(2u, j);
     }
 
     if (sudoku.HasChange()) {
-      stats.swordfish[4]++;
+      stats.finned_fish[2]++;
       continue;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
-      sudoku.SolveSwordFish(5u, j);
+      sudoku.SolveFinnedFish(3u, j);
     }
 
     if (sudoku.HasChange()) {
-      stats.swordfish[5]++;
+      stats.finned_fish[3]++;
       continue;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
-      sudoku.SolveSwordFish(6u, j);
+      sudoku.SolveFish(4u, j);
     }
 
     if (sudoku.HasChange()) {
-      stats.swordfish[6]++;
+      stats.fish[4]++;
       continue;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
-      sudoku.SolveSwordFish(7u, j);
+      sudoku.SolveFish(5u, j);
     }
 
     if (sudoku.HasChange()) {
-      stats.swordfish[7]++;
+      stats.fish[5]++;
       continue;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
-      sudoku.SolveSwordFish(8u, j);
+      sudoku.SolveFish(6u, j);
     }
 
     if (sudoku.HasChange()) {
-      stats.swordfish[8]++;
+      stats.fish[6]++;
+      continue;
+    }
+
+    for (unsigned j = 1; j <= sudoku.Size(); j++) {
+      sudoku.SolveFish(7u, j);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.fish[7]++;
+      continue;
+    }
+
+    for (unsigned j = 1; j <= sudoku.Size(); j++) {
+      sudoku.SolveFinnedFish(4u, j);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.finned_fish[4]++;
+      continue;
+    }
+
+    for (unsigned j = 1; j <= sudoku.Size(); j++) {
+      sudoku.SolveFinnedFish(5u, j);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.finned_fish[5]++;
+      continue;
+    }
+
+    for (unsigned j = 1; j <= sudoku.Size(); j++) {
+      sudoku.SolveFinnedFish(6u, j);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.finned_fish[6]++;
+      continue;
+    }
+
+    for (unsigned j = 1; j <= sudoku.Size(); j++) {
+      sudoku.SolveFinnedFish(7u, j);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.finned_fish[7]++;
       continue;
     }
 

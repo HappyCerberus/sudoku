@@ -186,9 +186,9 @@ void recursive_number_find(std::vector<std::vector<unsigned>> &result,
   generic_recursive_find<sudoku::Square>(result, squares, size, check);
 }
 
-// swordfish: grab X number of blocks, we look at the positions of a number, if
-// the size of union of the positions == X, then we have a swordfish
-void recursive_swordfish_find(std::vector<std::vector<unsigned>> &result,
+// fish: grab X number of blocks, we look at the positions of a number, if
+// the size of union of the positions == X, then we have a fish
+void recursive_fish_find(std::vector<std::vector<unsigned>> &result,
                               const std::vector<BlockChecker *> &blocks,
                               unsigned size, unsigned number) {
   auto check = [number](const std::vector<BlockChecker *> &elems,
@@ -198,6 +198,37 @@ void recursive_swordfish_find(std::vector<std::vector<unsigned>> &result,
       elems[v]->NumberPositions(number, positions);
     }
     return positions.size() == set.size();
+  };
+  generic_recursive_find<BlockChecker>(result, blocks, size, check);
+}
+
+// finned fish: grab X number of blocks, we look at the positions of a
+// number, if the size of union of the positions == X + 1, we check if there
+// is a fin, as in a position that is only in one of the blocks
+//
+// because if we then remove the singular position we have a fish of size X
+void recursive_finned_fish_find(std::vector<std::vector<unsigned>> &result,
+                         const std::vector<BlockChecker *> &blocks,
+                         unsigned size, unsigned number) {
+  auto check = [number](const std::vector<BlockChecker *> &elems,
+                        const std::vector<unsigned> &set) -> bool {
+    std::unordered_set<unsigned> positions;
+    for (unsigned v : set) {
+      elems[v]->NumberPositions(number, positions);
+    }
+    if (positions.size() == set.size() + 1) {
+      for (unsigned p : positions) {
+        unsigned count = 0;
+        for (unsigned v : set) {
+          if (elems[v]->HasNumberAtPosition(number, p))
+            count++;
+        }
+        if (count == 1) {
+          return true;
+        }
+      }
+    }
+    return false;
   };
   generic_recursive_find<BlockChecker>(result, blocks, size, check);
 }
@@ -247,6 +278,10 @@ void BlockChecker::SolveHiddenGroups(unsigned size) const {
       }
     }
   }
+}
+bool BlockChecker::HasNumberAtPosition(unsigned number, unsigned position)
+    const {
+  return elem_[position]->IsPossible(number);
 }
 
 } // namespace sudoku

@@ -270,6 +270,16 @@ public:
     return result;
   }
 
+  /*! Compare two sudoku squares.
+   *
+   * @param r Square to compare to.
+   * @return True if both squares contain the same possibilities, False
+   * otherwise.
+   */
+  bool operator ==(const Square& r) const {
+    return data_ == r.data_;
+  }
+
   /*! Generate a debug a string representing the possibilities in the square.
    *
    * @return Debug string in the following format [1..456..9] where 1,4,5,6,9

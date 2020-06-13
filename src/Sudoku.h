@@ -145,8 +145,11 @@ public:
   //! Debug print the puzzle (output the current possibilities for each square).
   void DebugPrint(std::ostream &s);
 
-  //! Solve swordfish for a given size and a number.
-  void SolveSwordFish(unsigned size, unsigned number);
+  //! Solve fish for a given size and a number.
+  void SolveFish(unsigned size, unsigned number);
+
+  //! Solve finned fish for a given size and a number.
+  void SolveFinnedFish(unsigned size, unsigned number);
 
 private:
   std::vector<BlockChecker> checks_;
@@ -157,6 +160,13 @@ private:
   unsigned size_;
 
   void SetupCheckers(unsigned size = 9, SudokuTypes type = BASIC);
+
+  unsigned NumberOfSharedBlocks(std::pair<unsigned, unsigned> l,
+                            std::pair<unsigned, unsigned> r) const;
+
+  std::pair<unsigned,unsigned> GetFin(const std::vector<BlockChecker *>& blocks,
+                  const std::vector<unsigned>& set,
+                  unsigned number) const;
 
   friend std::vector<std::vector<std::vector<BlockChecker *>>> &
   TestGetMappings(Sudoku &s);
