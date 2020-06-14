@@ -195,7 +195,11 @@ void recursive_fish_find(std::vector<std::vector<unsigned>> &result,
                         const std::vector<unsigned> &set) -> bool {
     std::unordered_set<unsigned> positions;
     for (size_t v : set) {
-      elems[v]->NumberPositions(number, positions);
+      auto pos = elems[v]->NumberPositions(number);
+      if (pos.size() < 2)
+        return false;
+
+      positions.insert(pos.begin(), pos.end());
     }
     return positions.size() == set.size();
   };
@@ -214,7 +218,11 @@ void recursive_finned_fish_find(std::vector<std::vector<unsigned>> &result,
                         const std::vector<unsigned> &set) -> bool {
     std::unordered_set<unsigned> positions;
     for (unsigned v : set) {
-      elems[v]->NumberPositions(number, positions);
+      auto pos = elems[v]->NumberPositions(number);
+      if (pos.size() < 2)
+        return false;
+
+      positions.insert(pos.begin(), pos.end());
     }
     if (positions.size() == set.size() + 1) {
       for (unsigned p : positions) {

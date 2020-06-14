@@ -240,14 +240,19 @@ void Sudoku::SolveFinnedFish(unsigned int size, unsigned int number) {
         continue;
       if (NumberOfSharedBlocks(std::make_pair(fin.second, fin.first),
                                std::make_pair(j, fin.first)) > 1) {
+        bool should_return = false;
         for (unsigned k = 0; k < Size(); k++) {
           if (k == fin.first)
             continue;
           if (NumberOfSharedBlocks(std::make_pair(fin.second, fin.first),
                                    std::make_pair(j, k)) >= 1) {
             data_[j][k] -= number;
+            if (data_[j][k].HasChanged()) {
+              should_return = true;
+            }
           }
         }
+        if (should_return) return;
       }
     }
   }
@@ -273,14 +278,19 @@ void Sudoku::SolveFinnedFish(unsigned int size, unsigned int number) {
         continue;
       if (NumberOfSharedBlocks(std::make_pair(fin.first, fin.second),
                                std::make_pair(fin.first, j)) > 1) {
+        bool should_return = false;
         for (unsigned k = 0; k < Size(); k++) {
           if (k == fin.first)
             continue;
           if (NumberOfSharedBlocks(std::make_pair(fin.first, fin.second),
                                    std::make_pair(k, j)) >= 1) {
             data_[k][j] -= number;
+            if (data_[k][j].HasChanged()) {
+              should_return = true;
+            }
           }
         }
+        if (should_return) return;
       }
     }
   }
@@ -341,10 +351,12 @@ C  7  *  6   E  *  8  *   *  *  *  *   *  *  *  3
 *  *  5  A   *  *  *  B   *  E  *  8   6  *  2  *
 */
 std::istream &operator>>(std::istream &s, Sudoku &puzzle) {
+  std::string debug = "";
   for (unsigned i = 0; i < puzzle.Size(); i++) {
     for (unsigned j = 0; j < puzzle.Size(); j++) {
       char c;
       s >> c;
+      debug += c;
       if (c == '*' || c == '0') {
         puzzle[i][j].Reset();
         continue;
@@ -355,6 +367,7 @@ std::istream &operator>>(std::istream &s, Sudoku &puzzle) {
         puzzle[i][j] = static_cast<unsigned>(c - '0');
     }
   }
+  puzzle.debug_ = debug;
   return s;
 }
 } // namespace sudoku

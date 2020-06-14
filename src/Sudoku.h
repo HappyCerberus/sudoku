@@ -14,6 +14,12 @@ enum SudokuTypes { BASIC = 1, DIAGONAL = 2 };
 typedef std::vector<std::vector<sudoku::Square>> SudokuDataType;
 
 namespace sudoku {
+class Sudoku;
+
+std::ostream &operator<<(std::ostream &s, const Sudoku &puzzle);
+std::istream &operator>>(std::istream &s, Sudoku &puzzle);
+
+
 class SudokuRow {
 public:
   SudokuRow() = delete;
@@ -158,6 +164,7 @@ private:
   SudokuDataType data_;
   std::vector<std::vector<std::vector<BlockChecker *>>> block_mapping_;
   unsigned size_;
+  std::string debug_;
 
   void SetupCheckers(unsigned size = 9, SudokuTypes type = BASIC);
 
@@ -170,10 +177,9 @@ private:
 
   friend std::vector<std::vector<std::vector<BlockChecker *>>> &
   TestGetMappings(Sudoku &s);
-};
 
-std::ostream &operator<<(std::ostream &s, const Sudoku &puzzle);
-std::istream &operator>>(std::istream &s, Sudoku &puzzle);
+  friend std::istream &operator>>(std::istream &s, Sudoku &puzzle);
+};
 } // namespace sudoku
 
 #endif // SUDOKU_SUDOKU_H

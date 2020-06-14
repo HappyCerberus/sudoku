@@ -13,6 +13,7 @@ struct SolveStats {
   unsigned block_intersections;
   std::unordered_map<unsigned, unsigned> fish;
   std::unordered_map<unsigned, unsigned> finned_fish;
+  SolveStats() : groups(), block_intersections(0), fish(), finned_fish() {}
   SolveStats &operator+=(const SolveStats &stats);
 };
 

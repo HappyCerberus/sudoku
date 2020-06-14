@@ -1,6 +1,8 @@
 /* (c) 2020 RNDr. Simon Toth (happy.cerberus@gmail.com) */
 
 #include "../src/Sudoku.h"
+#include "../src/SmartSolver.h"
+#include "../src/SolveStats.h"
 #include <catch2/catch.hpp>
 #include <sstream>
 #include <iostream>
@@ -73,6 +75,80 @@ TEST_CASE("Sudoku : Fish", "") {
   }
 }
 
+TEST_CASE("Sudoku : X-Wing test 1", "") {
+  Sudoku test(9);
+  for (unsigned i = 0; i < 9; i++) {
+    for (unsigned j = 0; j < 9; j++) {
+      test[i][j] -= 4;
+    }
+  }
+
+  test[6][3] += 4;
+  test[6][4] += 4;
+  test[6][6] += 4;
+  test[1][4] += 4;
+  test[1][6] += 4;
+
+
+  test.SolveFish(2,4);
+  unsigned count = 0;
+  for (unsigned i = 0; i < 9; i++) {
+    for (unsigned j = 0; j < 9; j++) {
+      if (test[i][j].IsPossible(4)) count++;
+    }
+  }
+
+  REQUIRE(!test[6][3].IsPossible(4));
+  REQUIRE(count == 4);
+}
+
+TEST_CASE("Sudoku : X-Wing test 2", "") {
+  Sudoku test(9);
+  for (unsigned i = 0; i < 9; i++) {
+    for (unsigned j = 0; j < 9; j++) {
+      test[i][j] -= 4;
+    }
+  }
+/*
+[.23......] [........9] [.23......] [...456...] [1........] [....56...] [......7..] [.......8.] [...45....]
+[1........] [.......8.] [.....6...] [.2.......] [...4..7..] [....5.7..] [...45....] [..3......] [........9]
+[....5....] [...4.....] [......7..] [........9] [.......8.] [..3......] [.....6...] [.2.......] [1........]
+[.23......] [1........] [....5....] [.......8.] [.....6...] [...4.....] [.23......] [........9] [......7..]
+[.....6...] [.23...7..] [...4.....] [..3.5.7..] [.23...7.9] [....5.7.9] [.......8.] [1........] [.23.5....]
+[........9] [.23...7..] [.......8.] [..3.5.7..] [.23...7..] [1........] [.23.5....] [...4.....] [.....6...]
+[......7..] [.23......] [1........] [..34.6...] [..34....9] [.....6..9] [.234.....] [....5....] [.......8.]
+[.......8.] [....5....] [........9] [..34..7..] [..3...7..] [.2.......] [1........] [.....6...] [..34.....]
+[...4.....] [.....6...] [.23......] [1........] [....5....] [.......8.] [........9] [......7..] [.23......]
+ */
+
+
+  test[0][3] += 4;
+  test[0][8] += 4;
+  test[1][4] += 4;
+  test[1][6] += 4;
+  test[2][1] += 4;
+  test[3][5] += 4;
+  test[4][2] += 4;
+  test[5][7] += 4;
+  test[6][3] += 4;
+  test[6][4] += 4;
+  test[6][6] += 4;
+  test[7][3] += 4;
+  test[7][8] += 4;
+  test[8][0] += 4;
+
+  test.SolveFish(2,4);
+  unsigned count = 0;
+  for (unsigned i = 0; i < 9; i++) {
+    for (unsigned j = 0; j < 9; j++) {
+      if (test[i][j].IsPossible(4)) count++;
+    }
+  }
+
+  REQUIRE(!test[6][3].IsPossible(4));
+  REQUIRE(count == 13);
+}
+
 TEST_CASE("Sudoku : Finned Fish", "") {
   {
     Sudoku test(9);
@@ -95,6 +171,7 @@ TEST_CASE("Sudoku : Finned Fish", "") {
 
     for (unsigned i = 0; i < 9; i++) {
       for (unsigned j = 0; j < 9; j++) {
+        INFO(i << j);
         REQUIRE(test[i][j] == expect[i][j]);
       }
     }
@@ -126,6 +203,30 @@ TEST_CASE("Sudoku : Finned Fish", "") {
     }
   }
 
+}
+
+TEST_CASE("Sudoku : Solve test", "[debug]") {
+  /*
+  std::string puzzle = "000000700080200039507900620005060097600000810900001046700000050009002060460108070";
+  Sudoku p(9);
+  std::stringstream s(puzzle);
+  s >> p;
+  REQUIRE(p[0][6].IsSet());
+  REQUIRE(p[0][6].Value() == 7);
+
+  SolveStats stats;
+  REQUIRE(SmartSolver::Solve(p, stats));
+
+  std::string expect =
+      "392615784186247539547983621215864397634729815978531246721396458859472163463158972";
+  size_t offset = 0;
+  for (unsigned i = 0; i < p.Size(); i++) {
+    for (unsigned j = 0; j < p.Size(); j++) {
+      REQUIRE(static_cast<unsigned>(expect[offset]-'0') == p[i][j].Value());
+      offset++;
+    }
+  }
+   */
 }
 
 } // namespace sudoku
