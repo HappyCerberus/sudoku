@@ -28,7 +28,7 @@ public:
    */
   explicit Square(unsigned max_value = 9)
       : data_(~((~ZERO64) << static_cast<uint64_t>(max_value))),
-        max_(static_cast<uint8_t>(max_value)), changed_(true) {
+        max_(static_cast<uint8_t>(max_value)), orig_(data_){
     assert(max_value <= 64);
   }
 
