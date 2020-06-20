@@ -99,9 +99,6 @@ public:
    *
    */
   void Reset() {
-    if (data_ != ~((~ZERO64) << static_cast<uint64_t>(max_))) {
-      changed_ = true;
-    }
     data_ = ~((~ZERO64) << static_cast<uint64_t>(max_));
   }
 
@@ -109,22 +106,19 @@ public:
    *
    */
   void ResetToEmpty() {
-    if (data_ != ZERO64) {
-      changed_ = true;
-    }
     data_ = ZERO64;
   }
 
   /*! Mark the square as not changed.
    *
    */
-  void ResetChanged() { changed_ = false; }
+  void ResetChanged() { orig_ = data_; }
 
   /*! Returns whether the square has changed since last ResetChanged().
    *
    * @return True if changed, False if not.
    */
-  bool HasChanged() const { return changed_; }
+  bool HasChanged() const { return orig_ == data_; }
 
   /*! Returns whether there is a possibility intersection with the given square.
    *
@@ -140,9 +134,6 @@ public:
    * @return this
    */
   Square &operator&=(const Square &r) {
-    if (data_ != (data_ & r.data_)) {
-      changed_ = true;
-    }
     data_ &= r.data_;
     return *this;
   }
@@ -167,9 +158,6 @@ public:
    * @return this
    */
   Square &operator=(unsigned number) {
-    if (data_ != SingleBit(number)) {
-      changed_ = true;
-    }
     data_ = SingleBit(number);
     return *this;
   }
@@ -180,9 +168,6 @@ public:
    * @return this
    */
   Square &operator+=(unsigned number) {
-    if (data_ != (data_ | SingleBit(number))) {
-      changed_ = true;
-    }
     data_ |= SingleBit(number);
     return *this;
   }
@@ -204,9 +189,6 @@ public:
    * @return this
    */
   Square &operator+=(Square r) {
-    if (data_ != (data_ | r.data_)) {
-      changed_ = true;
-    }
     data_ |= r.data_;
     return *this;
   }
@@ -228,9 +210,6 @@ public:
    * @return this
    */
   Square &operator-=(unsigned number) {
-    if (data_ != (data_ & ~SingleBit(number))) {
-      changed_ = true;
-    }
     data_ &= ~SingleBit(number);
     return *this;
   }
@@ -252,9 +231,6 @@ public:
    * @return this
    */
   Square &operator-=(Square r) {
-    if (data_ != (data_ & ~r.data_)) {
-      changed_ = true;
-    }
     data_ &= ~r.data_;
     return *this;
   }
@@ -289,9 +265,6 @@ public:
 
 private:
   void OverrideValue(uint64_t data) {
-    if (data != data_) {
-      changed_ = true;
-    }
     data_ = data;
   }
 
@@ -302,7 +275,7 @@ private:
 
   uint64_t data_;
   uint8_t max_;
-  bool changed_;
+  uint64_t orig_;
 
   friend void TestOverrideValue(Square &, uint64_t);
 

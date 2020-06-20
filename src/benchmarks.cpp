@@ -1,4 +1,6 @@
 #include <benchmark/benchmark.h>
+#include <memory_resource>
+#include <random>
 
 template <typename T>
 void generic_recursive_find(
@@ -124,5 +126,65 @@ static void BM_NonRecursiveFind(benchmark::State& state) {
 }
 
 BENCHMARK(BM_NonRecursiveFind)->DenseRange(2,5);
+
+// test the impact of monitoring change in a sudoku square
+// test multiple passes (as an argument of the benchmark) over the data
+// before checking if changed
+
+class RandomData : public benchmark::Fixture {
+public:
+  void SetUp(benchmark::State& state) override {
+    size_t size = static_cast<size_t>(state.range());
+    random_numbers_.reserve(size);
+    std::random_device                  rand_dev;
+    std::mt19937                        generator(rand_dev());
+    std::uniform_int_distribution<unsigned>  distr(0,
+                                             std::numeric_limits<unsigned>::max());
+    for (size_t i = 0; i < size; i++) {
+      random_numbers_.push_back(distr(generator));
+    }
+  }
+
+  void TearDown(benchmark::State&) override {
+    random_numbers_.clear();
+  }
+
+protected:
+  std::vector<unsigned> random_numbers_;
+};
+
+BENCHMARK_DEFINE_F(RandomData, TrackChangeOnce)(benchmark::State& state) {
+  for (auto _ : state) {
+    bool changed = false;
+    unsigned v = this->random_numbers_[0];
+    for (size_t i = 0; i < this->random_numbers_.size(); i++) {
+      v &= this->random_numbers_[i];
+      benchmark::DoNotOptimize(v);
+    }
+    if (v != this->random_numbers_[0]) {
+      changed = true;
+    }
+    benchmark::DoNotOptimize(changed);
+  }
+}
+
+BENCHMARK_DEFINE_F(RandomData, TrackChangeIncremental)(benchmark::State&
+                                                             state) {
+  for (auto _ : state) {
+    bool changed = false;
+    unsigned v = this->random_numbers_[0];
+    for (size_t i = 0; i < this->random_numbers_.size(); i++) {
+      if (v != (v & this->random_numbers_[i])) {
+        changed = true;
+      }
+      v &= this->random_numbers_[i];
+      benchmark::DoNotOptimize(v);
+    }
+    benchmark::DoNotOptimize(changed);
+  }
+}
+
+BENCHMARK_REGISTER_F(RandomData, TrackChangeOnce)->RangeMultiplier(2)->Range(8, 8<<5);
+BENCHMARK_REGISTER_F(RandomData, TrackChangeIncremental)->RangeMultiplier(2)->Range(8, 8<<5);
 
 BENCHMARK_MAIN();
