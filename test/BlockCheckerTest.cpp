@@ -51,7 +51,7 @@ TEST_CASE("BlockChecker : recursive_set_find", "") {
     }
     std::vector<std::vector<unsigned>> result;
     recursive_set_find(result, squares, 1u);
-    REQUIRE(result.size() == 9u);
+    //REQUIRE(result.size() == 9u);
     REQUIRE_THAT(result,
                  UnorderedEquals(std::vector<std::vector<unsigned>>{
                      std::vector<unsigned>{0u}, std::vector<unsigned>{1u},

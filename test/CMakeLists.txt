@@ -21,6 +21,10 @@ add_executable(sudoku_tests SudokuTest.cpp)
 target_link_libraries(sudoku_tests PRIVATE sudoku_lib project_warnings project_options
         catch_main)
 
+add_executable(solver_tests SmartSolverTest.cpp)
+target_link_libraries(solver_tests PRIVATE sudoku_lib project_warnings project_options
+        catch_main)
+
 # automatically discover tests that are defined in catch based test files you
 # can modify the unittests. TEST_PREFIX to whatever you want, or use different
 # for different binaries
@@ -50,6 +54,18 @@ catch_discover_tests(
 # for different binaries
 catch_discover_tests(
         square_tests
+        TEST_PREFIX
+        "unittests."
+        EXTRA_ARGS
+        -s
+        --reporter=xml
+        --out=tests.xml)
+
+# automatically discover tests that are defined in catch based test files you
+# can modify the unittests. TEST_PREFIX to whatever you want, or use different
+# for different binaries
+catch_discover_tests(
+        solver_tests
         TEST_PREFIX
         "unittests."
         EXTRA_ARGS

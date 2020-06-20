@@ -5,36 +5,12 @@
 #include "SmartSolver.h"
 
 bool SmartSolver::Solve(sudoku::Sudoku &sudoku, SolveStats &stats) {
-  /*
-   * while (not_solved) {
-   *    while (something_changed) {
-   *      solve_for_groups();
-   *    }
-   *    solve_for_intersections();
-   *    if (something_changed) continue;
-   *
-   *    solve_for_swordfish();
-   *    if (something_changed) continue;
-   *
-   *    make_a_guess();
-   * }
-   */
-
   while (!sudoku.IsSet()) {
     auto changed_blocks = sudoku.ChangedBlocks();
     if (changed_blocks.size() == 0) {
       return false;
     }
     sudoku.ResetChange();
-
-    // Rough difficulty scale:
-    // Group{1}
-    // Group{2}
-    // Intersections
-    // Group{3}
-    // Swordfish{2}
-    // Group{4}
-    // Swordfish{3,4,5,6,7,8,9}
 
     for (auto &block : changed_blocks) {
       block->SolveHiddenGroups(1);

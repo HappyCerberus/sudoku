@@ -121,6 +121,10 @@ void generic_nonrecursive_find(
   path.reserve(elems.size());
   path.push_back(0);
 
+  if (size == 1 && is_valid_set(elems, path)) {
+    result.push_back(path);
+  }
+
   while (true) {
     if (path.size() == size) {
       if (path[size - 1] < elems.size() - 1) {

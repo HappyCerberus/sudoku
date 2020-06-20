@@ -27,8 +27,8 @@ public:
    * @param max_value Maximum number to support {9, 16, 25, 36, 49, 64}
    */
   explicit Square(unsigned max_value = 9)
-      : data_(~((~ZERO64) << static_cast<uint64_t>(max_value))),
-        max_(static_cast<uint8_t>(max_value)), orig_(data_){
+      : data_(~((~ZERO64) << static_cast<uint64_t>(max_value))), orig_(ZERO64),
+        max_(static_cast<uint8_t>(max_value)){
     assert(max_value <= 64);
   }
 
@@ -100,6 +100,7 @@ public:
    */
   void Reset() {
     data_ = ~((~ZERO64) << static_cast<uint64_t>(max_));
+    orig_ = ZERO64;
   }
 
   /*! Resets the square to contain zero possibilities.
@@ -118,7 +119,7 @@ public:
    *
    * @return True if changed, False if not.
    */
-  bool HasChanged() const { return orig_ == data_; }
+  bool HasChanged() const { return orig_ != data_; }
 
   /*! Returns whether there is a possibility intersection with the given square.
    *
@@ -274,8 +275,8 @@ private:
   }
 
   uint64_t data_;
-  uint8_t max_;
   uint64_t orig_;
+  uint8_t max_;
 
   friend void TestOverrideValue(Square &, uint64_t);
 
