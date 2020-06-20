@@ -112,37 +112,43 @@ void BlockChecker::SolveIntersection(BlockChecker &r) const {
 }
 
 template <typename T>
-void generic_recursive_find(
+void generic_nonrecursive_find(
     std::vector<std::vector<unsigned>> &result, const std::vector<T *> &elems,
     unsigned size,
     const std::function<bool(const std::vector<T *> &,
-                             const std::vector<unsigned> &)> &is_valid_set,
-    unsigned consumed, std::vector<unsigned> path, unsigned first_index) {
-  for (unsigned i = first_index; i < elems.size() - (size - consumed - 1);
-       i++) {
-    if ((size - consumed) == 1) {
-      std::vector<unsigned> r = path;
-      r.push_back(i);
-      if (is_valid_set(elems, r)) {
-        result.push_back(r);
+                             const std::vector<unsigned> &)> &is_valid_set) {
+  std::vector<unsigned> path;
+  path.reserve(elems.size());
+  path.push_back(0);
+
+  while (true) {
+    if (path.size() == size) {
+      if (path[size - 1] < elems.size() - 1) {
+        ++path[size - 1];
+        if (is_valid_set(elems, path)) {
+          result.push_back(path);
+        }
+        continue;
       }
     } else {
-      std::vector<unsigned> new_path = path;
-      new_path.push_back(i);
-      generic_recursive_find(result, elems, size, is_valid_set, consumed + 1,
-                             new_path, i + 1);
+      for (unsigned i = static_cast<unsigned>(path.size()); i < size; i++) {
+        path.push_back(path[i - 1] + 1);
+      }
+      if (is_valid_set(elems, path)) {
+        result.push_back(path);
+      }
+      continue;
     }
-  }
-}
 
-template <typename T>
-void generic_recursive_find(
-    std::vector<std::vector<unsigned>> &result, const std::vector<T *> &elems,
-    unsigned size,
-    std::function<bool(const std::vector<T *> &, const std::vector<unsigned> &)>
-        is_valid_set) {
-  generic_recursive_find(result, elems, size, is_valid_set, 0,
-                         std::vector<unsigned>{}, 0);
+    // if (path.size() == size && path[size-1] == elemens.size()-1)
+    while (!path.empty() &&
+           path[path.size() - 1] == elems.size() - 1 - (size - path.size())) {
+      path.pop_back();
+    }
+    if (path.empty())
+      break;
+    ++path[path.size() - 1];
+  }
 }
 
 // if we pick X squares, and the number of possibilities within these squares
@@ -159,7 +165,7 @@ void recursive_set_find(std::vector<std::vector<unsigned>> &result,
     }
     return tmp_union.CountPossible() == set.size();
   };
-  generic_recursive_find<sudoku::Square>(result, squares, size, check);
+  generic_nonrecursive_find<sudoku::Square>(result, squares, size, check);
 }
 
 // if X possibilities only appear in X squares, then those squares can't
@@ -183,7 +189,7 @@ void recursive_number_find(std::vector<std::vector<unsigned>> &result,
 
     return count_squares == set.size();
   };
-  generic_recursive_find<sudoku::Square>(result, squares, size, check);
+  generic_nonrecursive_find<sudoku::Square>(result, squares, size, check);
 }
 
 // fish: grab X number of blocks, we look at the positions of a number, if
@@ -203,7 +209,7 @@ void recursive_fish_find(std::vector<std::vector<unsigned>> &result,
     }
     return positions.size() == set.size();
   };
-  generic_recursive_find<BlockChecker>(result, blocks, size, check);
+  generic_nonrecursive_find<BlockChecker>(result, blocks, size, check);
 }
 
 // finned fish: grab X number of blocks, we look at the positions of a
@@ -238,7 +244,7 @@ void recursive_finned_fish_find(std::vector<std::vector<unsigned>> &result,
     }
     return false;
   };
-  generic_recursive_find<BlockChecker>(result, blocks, size, check);
+  generic_nonrecursive_find<BlockChecker>(result, blocks, size, check);
 }
 
 void BlockChecker::SolveNakedGroups() const {
