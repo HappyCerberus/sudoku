@@ -1,8 +1,5 @@
 #include <benchmark/benchmark.h>
-#include <memory_resource>
 #include <random>
-
-namespace pmr = std::pmr;
 
 template <typename T>
 void generic_recursive_find(
@@ -80,11 +77,11 @@ void generic_nonrecursive_find(
 
 template <typename T>
 void generic_nonrecursive_find_v2(
-    pmr::vector<pmr::vector<unsigned>> &result, const pmr::vector<T *> &elems,
+    std::vector<unsigned> &result, const std::vector<T *> &elems,
     unsigned size,
-    const std::function<bool(const pmr::vector<T *> &,
-                             const pmr::vector<unsigned> &)> &is_valid_set) {
-  pmr::vector<unsigned> path(result.get_allocator());
+    const std::function<bool(const std::vector<T *> &,
+                             const std::vector<unsigned> &)> &is_valid_set) {
+  std::vector<unsigned> path;
   path.reserve(size);
   path.push_back(0);
 
@@ -93,7 +90,8 @@ void generic_nonrecursive_find_v2(
       if (path[size - 1] < elems.size() - 1) {
         ++path[size - 1];
         if (is_valid_set(elems, path)) {
-          result.push_back(path);
+          for (size_t i = 0; i < size; i++)
+            result.push_back(path[i]);
         }
         continue;
       }
@@ -102,7 +100,8 @@ void generic_nonrecursive_find_v2(
         path.push_back(path[i - 1] + 1);
       }
       if (is_valid_set(elems, path)) {
-        result.push_back(path);
+        for (size_t i = 0; i < size; i++)
+          result.push_back(path[i]);
       }
       continue;
     }
@@ -140,16 +139,13 @@ template <typename Fnc> void BM_find(benchmark::State &state, Fnc &&call) {
 }
 
 template <typename Fnc> void BM_find_v2(benchmark::State &state, Fnc &&call) {
-  std::byte buffer[256*1024];
-  pmr::monotonic_buffer_resource mr(buffer, sizeof(buffer));
-  pmr::polymorphic_allocator<std::byte> alloc(&mr);
-  pmr::vector<pmr::vector<unsigned>> result(alloc);
+  std::vector<unsigned> result;
   unsigned base_data[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-  pmr::vector<unsigned *> data = {&base_data[0], &base_data[1], &base_data[2],
+  std::vector<unsigned *> data = {&base_data[0], &base_data[1], &base_data[2],
                                   &base_data[3], &base_data[4], &base_data[5],
                                   &base_data[6], &base_data[7], &base_data[8]};
-  auto f = [](const pmr::vector<unsigned *> &e,
-              const pmr::vector<unsigned> &s) {
+  auto f = [](const std::vector<unsigned *> &e,
+              const std::vector<unsigned> &s) {
     unsigned sum = 0;
     for (auto v : s) {
       sum += *(e[v]);

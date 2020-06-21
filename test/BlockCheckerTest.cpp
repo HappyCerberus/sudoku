@@ -49,16 +49,13 @@ TEST_CASE("BlockChecker : recursive_set_find", "") {
     for (unsigned i = 0; i < static_cast<unsigned>(data.size()); i++) {
       data[i] = i + 1u;
     }
-    std::vector<std::vector<unsigned>> result;
+    std::vector<unsigned> result;
     recursive_set_find(result, squares, 1u);
     //REQUIRE(result.size() == 9u);
     REQUIRE_THAT(result,
-                 UnorderedEquals(std::vector<std::vector<unsigned>>{
-                     std::vector<unsigned>{0u}, std::vector<unsigned>{1u},
-                     std::vector<unsigned>{2u}, std::vector<unsigned>{3u},
-                     std::vector<unsigned>{4u}, std::vector<unsigned>{5u},
-                     std::vector<unsigned>{6u}, std::vector<unsigned>{7u},
-                     std::vector<unsigned>{8u}}));
+                 UnorderedEquals(std::vector<unsigned>{0u,1u,2u,
+                                                       3u,4u,5u,
+                                                       6u,7u,8u}));
   }
   {
     TestOverrideValue(data[0], 0b11u);
@@ -71,14 +68,13 @@ TEST_CASE("BlockChecker : recursive_set_find", "") {
     TestOverrideValue(data[7], 0b1100000u);
     TestOverrideValue(data[8], 0b110000000u);
 
-    std::vector<std::vector<unsigned>> result;
+    std::vector<unsigned> result;
     recursive_set_find(result, squares, 2u);
-    REQUIRE(result.size() == 4lu);
+    REQUIRE(result.size() == 2*4lu);
     REQUIRE_THAT(
         result,
-        UnorderedEquals(std::vector<std::vector<unsigned>>{
-            std::vector<unsigned>{0u, 1u}, std::vector<unsigned>{3u, 4u},
-            std::vector<unsigned>{5u, 7u}, std::vector<unsigned>{6u, 8u}}));
+        UnorderedEquals(std::vector<unsigned>{0u, 1u, 3u, 4u,
+                                                     5u, 7u, 6u, 8u}));
   }
 }
 
@@ -93,16 +89,13 @@ TEST_CASE("BlockChecker : recursive_number_find", "") {
     for (unsigned i = 0; i < static_cast<unsigned>(data.size()); i++) {
       data[i] = i + 1u;
     }
-    std::vector<std::vector<unsigned>> result;
+    std::vector<unsigned> result;
     recursive_number_find(result, squares, 1);
     REQUIRE(result.size() == 9u);
     REQUIRE_THAT(result,
-                 UnorderedEquals(std::vector<std::vector<unsigned>>{
-                     std::vector<unsigned>{0u}, std::vector<unsigned>{1u},
-                     std::vector<unsigned>{2u}, std::vector<unsigned>{3u},
-                     std::vector<unsigned>{4u}, std::vector<unsigned>{5u},
-                     std::vector<unsigned>{6u}, std::vector<unsigned>{7u},
-                     std::vector<unsigned>{8u}}));
+                 UnorderedEquals(std::vector<unsigned>{0u, 1u, 2u,
+                                                       3u, 4u, 5u,
+                                                       6u, 7u, 8u}));
   }
   {
     TestOverrideValue(data[0], 0b111u);
@@ -115,13 +108,11 @@ TEST_CASE("BlockChecker : recursive_number_find", "") {
     TestOverrideValue(data[7], 0b1100000u);
     TestOverrideValue(data[8], 0b111100000u);
 
-    std::vector<std::vector<unsigned>> result;
+    std::vector<unsigned> result;
     recursive_number_find(result, squares, 2);
-    REQUIRE(result.size() == 3u);
-    REQUIRE_THAT(result, UnorderedEquals(std::vector<std::vector<unsigned>>{
-                             std::vector<unsigned>{0u, 1u},
-                             std::vector<unsigned>{3u, 4u},
-                             std::vector<unsigned>{7u, 8u}}));
+    REQUIRE(result.size() == 2*3u);
+    REQUIRE_THAT(result, UnorderedEquals(std::vector<unsigned>{0u, 1u, 3u,
+                                                               4u, 7u, 8u}));
   }
 }
 } // namespace sudoku

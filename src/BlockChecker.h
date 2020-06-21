@@ -41,6 +41,14 @@ public:
    */
   void Prune(unsigned number, const std::vector<unsigned> &whitelist);
 
+  /*! Remove a number as a possibility from a block.
+   *
+   * @param number Number to be removed.
+   * @param whitelist Blocks to skip over.
+   */
+  void Prune(unsigned number, std::vector<unsigned>::const_iterator begin,
+             std::vector<unsigned>::const_iterator end);
+
   /*! Return possible positions for a number.
    *
    * @param number Number to search for.
@@ -99,20 +107,20 @@ private:
   friend SudokuBlockType &TestGetBlockData(BlockChecker &s);
 };
 
-void recursive_set_find(std::vector<std::vector<unsigned>> &result,
+void recursive_set_find(std::vector<unsigned> &result,
                         const std::vector<sudoku::Square *> &squares,
                         unsigned size);
 
-void recursive_number_find(std::vector<std::vector<unsigned>> &result,
+void recursive_number_find(std::vector<unsigned> &result,
                            const std::vector<sudoku::Square *> &squares,
                            unsigned size);
 
 // TODO: write tests
-void recursive_fish_find(std::vector<std::vector<unsigned>> &result,
+void recursive_fish_find(std::vector<unsigned> &result,
                               const std::vector<BlockChecker *> &blocks,
                               unsigned size, unsigned number);
 
-void recursive_finned_fish_find(std::vector<std::vector<unsigned>> &result,
+void recursive_finned_fish_find(std::vector<unsigned> &result,
                                 const std::vector<BlockChecker *> &blocks,
                                 unsigned size, unsigned number);
 

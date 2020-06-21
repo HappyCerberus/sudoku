@@ -172,7 +172,8 @@ private:
                             std::pair<unsigned, unsigned> r) const;
 
   std::pair<unsigned,unsigned> GetFin(const std::vector<BlockChecker *>& blocks,
-                  const std::vector<unsigned>& set,
+                  std::vector<unsigned>::const_iterator begin,
+                                      std::vector<unsigned>::const_iterator end,
                   unsigned number) const;
 
   friend std::vector<std::vector<std::vector<BlockChecker *>>> &

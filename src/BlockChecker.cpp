@@ -28,10 +28,16 @@ void BlockChecker::Prune(unsigned number) {
 
 void BlockChecker::Prune(unsigned int number,
                          const std::vector<unsigned> &whitelist) {
+  Prune(number,whitelist.begin(), whitelist.end());
+}
+
+void BlockChecker::Prune(unsigned int number,
+                         std::vector<unsigned>::const_iterator begin,
+                         std::vector<unsigned>::const_iterator end) {
   for (unsigned i = 0; i < Size(); i++) {
     bool skip = false;
-    for (unsigned j = 0; j < static_cast<unsigned>(whitelist.size()); j++) {
-      if (i == whitelist[j])
+    for (auto j = begin; j != end; j++) {
+      if (i == *j)
         skip = true;
     }
     if (skip == true)
@@ -113,7 +119,7 @@ void BlockChecker::SolveIntersection(BlockChecker &r) const {
 
 template <typename T>
 void generic_nonrecursive_find(
-    std::vector<std::vector<unsigned>> &result, const std::vector<T *> &elems,
+    std::vector<unsigned> &result, const std::vector<T *> &elems,
     unsigned size,
     const std::function<bool(const std::vector<T *> &,
                              const std::vector<unsigned> &)> &is_valid_set) {
@@ -122,7 +128,8 @@ void generic_nonrecursive_find(
   path.push_back(0);
 
   if (size == 1 && is_valid_set(elems, path)) {
-    result.push_back(path);
+    for (size_t i = 0; i < size; i++)
+      result.push_back(path[i]);
   }
 
   while (true) {
@@ -130,7 +137,8 @@ void generic_nonrecursive_find(
       if (path[size - 1] < elems.size() - 1) {
         ++path[size - 1];
         if (is_valid_set(elems, path)) {
-          result.push_back(path);
+          for (size_t i = 0; i < size; i++)
+            result.push_back(path[i]);
         }
         continue;
       }
@@ -139,7 +147,8 @@ void generic_nonrecursive_find(
         path.push_back(path[i - 1] + 1);
       }
       if (is_valid_set(elems, path)) {
-        result.push_back(path);
+        for (size_t i = 0; i < size; i++)
+          result.push_back(path[i]);
       }
       continue;
     }
@@ -157,7 +166,7 @@ void generic_nonrecursive_find(
 
 // if we pick X squares, and the number of possibilities within these squares
 // is X -> then these possibilities can't appear anywhere else in the block
-void recursive_set_find(std::vector<std::vector<unsigned>> &result,
+void recursive_set_find(std::vector<unsigned> &result,
                         const std::vector<sudoku::Square *> &squares,
                         unsigned size) {
   auto check = [](const std::vector<sudoku::Square *> &elems,
@@ -174,7 +183,7 @@ void recursive_set_find(std::vector<std::vector<unsigned>> &result,
 
 // if X possibilities only appear in X squares, then those squares can't
 // contain any other numbers
-void recursive_number_find(std::vector<std::vector<unsigned>> &result,
+void recursive_number_find(std::vector<unsigned> &result,
                            const std::vector<sudoku::Square *> &squares,
                            unsigned size) {
   auto check = [](const std::vector<sudoku::Square *> &elems,
@@ -198,7 +207,7 @@ void recursive_number_find(std::vector<std::vector<unsigned>> &result,
 
 // fish: grab X number of blocks, we look at the positions of a number, if
 // the size of union of the positions == X, then we have a fish
-void recursive_fish_find(std::vector<std::vector<unsigned>> &result,
+void recursive_fish_find(std::vector<unsigned> &result,
                               const std::vector<BlockChecker *> &blocks,
                               unsigned size, unsigned number) {
   auto check = [number](const std::vector<BlockChecker *> &elems,
@@ -221,7 +230,7 @@ void recursive_fish_find(std::vector<std::vector<unsigned>> &result,
 // is a fin, as in a position that is only in one of the blocks
 //
 // because if we then remove the singular position we have a fish of size X
-void recursive_finned_fish_find(std::vector<std::vector<unsigned>> &result,
+void recursive_finned_fish_find(std::vector<unsigned> &result,
                          const std::vector<BlockChecker *> &blocks,
                          unsigned size, unsigned number) {
   auto check = [number](const std::vector<BlockChecker *> &elems,
@@ -258,18 +267,18 @@ void BlockChecker::SolveNakedGroups() const {
 }
 
 void BlockChecker::SolveNakedGroups(unsigned size) const {
-  std::vector<std::vector<unsigned>> result;
+  std::vector<unsigned> result;
   recursive_set_find(result, elem_, size);
-  for (size_t x = 0; x < result.size(); x++) {
+  for (size_t x = 0; x < result.size()/size; x++) {
     Square u(Size());
     u.ResetToEmpty();
     for (unsigned y = 0; y < size; y++) {
-      u += *elem_[result[x][y]];
+      u += *elem_[result[x*size+y]];
     }
     for (unsigned j = 0; j < Size(); j++) {
       bool skip = false;
       for (unsigned y = 0; y < size; y++)
-        if (result[x][y] == j)
+        if (result[x*size+y] == j)
           skip = true;
       if (!skip)
         (*elem_[j]) -= u;
@@ -282,13 +291,13 @@ void BlockChecker::SolveHiddenGroups() const {
   }
 }
 void BlockChecker::SolveHiddenGroups(unsigned size) const {
-  std::vector<std::vector<unsigned>> result;
+  std::vector<unsigned> result;
   recursive_number_find(result, elem_, size);
-  for (size_t x = 0; x < result.size(); x++) {
+  for (size_t x = 0; x < result.size()/size; x++) {
     Square u(Size());
     u.ResetToEmpty();
     for (unsigned y = 0; y < size; y++) {
-      u += result[x][y] + 1u;
+      u += result[x*size+y] + 1u;
     }
     for (unsigned j = 0; j < Size(); j++) {
       if (elem_[j]->HasIntersection(u)) {
