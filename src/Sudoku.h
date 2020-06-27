@@ -11,7 +11,7 @@
 
 enum SudokuTypes { BASIC = 1, DIAGONAL = 2 };
 
-typedef std::vector<std::vector<sudoku::Square>> SudokuDataType;
+typedef std::vector<sudoku::Square> SudokuDataType;
 
 namespace sudoku {
 class Sudoku;
@@ -83,7 +83,7 @@ public:
    * @param data Data to pre-fill the puzzle with.
    * @param type BASIC or DIAGONAL.
    */
-  Sudoku(SudokuDataType data, SudokuTypes type = BASIC);
+  Sudoku(unsigned size, SudokuDataType data, SudokuTypes type = BASIC);
 
   // Removed copy constructor.
   Sudoku(const Sudoku &) = delete;
@@ -100,7 +100,7 @@ public:
    * @return A wrapper object around a row in the puzzle.
    */
   SudokuRow operator[](unsigned index) {
-    return SudokuRow(data_[index].data(), Size());
+    return SudokuRow(data_.data()+(index*Size()), Size());
   }
   /*! Square bracket operator to allow for 2D access.
    *
@@ -108,7 +108,7 @@ public:
    * @return A const wrapper object around a row in the puzzle.
    */
   ConstSudokuRow operator[](unsigned index) const {
-    return ConstSudokuRow(data_[index].data(), Size());
+    return ConstSudokuRow(data_.data()+(index*Size()), Size());
   }
 
   /*! Return whether there is a changed square in the puzzle.
@@ -117,6 +117,14 @@ public:
    *         otherwise.
    */
   bool HasChange() const;
+
+  /*! Return whether there is a changed square in the puzzle based on the
+   * given previous state.
+   *
+   * @return True if a square was changed compared the the given state.
+   */
+  bool HasChange(const std::vector<Square>& state) const;
+
   //! Reset the changed flag on all squares in the puzzle.
   void ResetChange();
   /*! Return the set of blocks that contain changed squares.
@@ -124,6 +132,14 @@ public:
    * @return Set of blocks.
    */
   std::unordered_set<BlockChecker *> ChangedBlocks() const;
+  std::unordered_set<BlockChecker *> ChangedBlocks(const std::vector<Square>&
+      state) const;
+
+  std::unordered_set<unsigned> RemovedNumbers(BlockChecker* block, const
+                                                 std::vector<Square>& state)
+      const;
+  std::unordered_set<unsigned> ChangedSquares(BlockChecker* block, const
+  std::vector<Square>& state) const;
 
   //! Return the size of the Sudoku.
   unsigned Size() const { return size_; }
@@ -156,6 +172,8 @@ public:
 
   //! Solve finned fish for a given size and a number.
   void SolveFinnedFish(unsigned size, unsigned number);
+
+  std::vector<Square> State() { return data_; }
 
 private:
   std::vector<BlockChecker> checks_;

@@ -9,19 +9,19 @@
 
 namespace sudoku {
 Sudoku::Sudoku(unsigned size, SudokuTypes type)
-    : data_(size, std::vector<sudoku::Square>(size, sudoku::Square{size})),
+    : data_(size*size, sudoku::Square{size}),
       block_mapping_(size, std::vector<std::vector<BlockChecker *>>(
                                size, std::vector<BlockChecker *>())),
       size_(size) {
   SetupCheckers(size, type);
 }
 
-Sudoku::Sudoku(SudokuDataType data, SudokuTypes type)
+Sudoku::Sudoku(unsigned size, SudokuDataType data, SudokuTypes type)
     : data_(std::move(data)),
-      block_mapping_(data_.size(),
+      block_mapping_(size,
                      std::vector<std::vector<BlockChecker *>>(
-                         data_.size(), std::vector<BlockChecker *>())),
-      size_(static_cast<unsigned>(data_.size())) {
+                         size, std::vector<BlockChecker *>())),
+      size_(size) {
   SetupCheckers(Size(), type);
 }
 
@@ -45,7 +45,7 @@ void Sudoku::SetupCheckers(unsigned int size, SudokuTypes type) {
   for (size_t i = 0; i < size; i++) {
     SudokuBlockType row;
     for (size_t j = 0; j < size; j++) {
-      row.push_back(&data_[i][j]);
+      row.push_back(&data_[i*Size()+j]);
     }
     checks_.emplace_back(row);
     for (size_t j = 0; j < size; j++) {
@@ -57,7 +57,7 @@ void Sudoku::SetupCheckers(unsigned int size, SudokuTypes type) {
   for (size_t j = 0; j < size; j++) {
     SudokuBlockType column;
     for (size_t i = 0; i < size; i++) {
-      column.push_back(&data_[i][j]);
+      column.push_back(&data_[i*Size()+j]);
     }
     checks_.emplace_back(column);
     for (size_t i = 0; i < size; i++) {
@@ -73,7 +73,7 @@ void Sudoku::SetupCheckers(unsigned int size, SudokuTypes type) {
       SudokuBlockType block;
       for (size_t x = i * bsize; x < (i + 1) * bsize; x++) {
         for (size_t y = j * bsize; y < (j + 1) * bsize; y++) {
-          block.push_back(&data_[x][y]);
+          block.push_back(&data_[x*Size()+y]);
         }
       }
       checks_.emplace_back(block);
@@ -90,8 +90,8 @@ void Sudoku::SetupCheckers(unsigned int size, SudokuTypes type) {
 
   SudokuBlockType d1, d2;
   for (size_t i = 0; i < size; i++) {
-    d1.push_back(&data_[i][i]);
-    d2.push_back(&data_[i][size - 1 - i]);
+    d1.push_back(&data_[i*Size()+i]);
+    d2.push_back(&data_[(i+1)*Size() - 1 - i]);
   }
   checks_.emplace_back(d1);
   checks_.emplace_back(d2);
@@ -104,7 +104,7 @@ void Sudoku::SetupCheckers(unsigned int size, SudokuTypes type) {
 void Sudoku::DebugPrint(std::ostream &s) {
   for (unsigned i = 0; i < Size(); i++) {
     for (unsigned j = 0; j < Size(); j++) {
-      s << data_[i][j] << " ";
+      s << data_[i*Size()+j] << " ";
     }
     s << std::endl;
   }
@@ -112,7 +112,17 @@ void Sudoku::DebugPrint(std::ostream &s) {
 bool Sudoku::HasChange() const {
   for (unsigned i = 0; i < Size(); i++) {
     for (unsigned j = 0; j < Size(); j++) {
-      if (data_[i][j].HasChanged())
+      if (data_[i*Size()+j].HasChanged())
+        return true;
+    }
+  }
+  return false;
+}
+
+bool Sudoku::HasChange(const std::vector<Square>& state) const {
+  for (unsigned i = 0; i < Size(); i++) {
+    for (unsigned j = 0; j < Size(); j++) {
+      if (data_[i*Size()+j] != state[i*Size()+j])
         return true;
     }
   }
@@ -122,7 +132,7 @@ bool Sudoku::HasChange() const {
 void Sudoku::ResetChange() {
   for (unsigned i = 0; i < Size(); i++) {
     for (unsigned j = 0; j < Size(); j++) {
-      data_[i][j].ResetChanged();
+      data_[i*Size()+j].ResetChanged();
     }
   }
 }
@@ -131,7 +141,7 @@ std::unordered_set<BlockChecker *> Sudoku::ChangedBlocks() const {
   std::unordered_set<BlockChecker *> result;
   for (unsigned i = 0; i < Size(); i++) {
     for (unsigned j = 0; j < Size(); j++) {
-      if (data_[i][j].HasChanged()) {
+      if (data_[i*Size()+j].HasChanged()) {
         for (auto &b : block_mapping_[i][j]) {
           result.insert(b);
         }
@@ -144,7 +154,7 @@ std::unordered_set<BlockChecker *> Sudoku::ChangedBlocks() const {
 std::pair<unsigned, unsigned> Sudoku::FirstUnset() const {
   for (unsigned i = 0; i < Size(); i++) {
     for (unsigned j = 0; j < Size(); j++) {
-      if (!data_[i][j].IsSet())
+      if (!data_[i*Size()+j].IsSet())
         return std::make_pair(i, j);
     }
   }
@@ -154,7 +164,7 @@ std::pair<unsigned, unsigned> Sudoku::FirstUnset() const {
 bool Sudoku::IsSet() const {
   for (unsigned i = 0; i < Size(); i++) {
     for (unsigned j = 0; j < Size(); j++) {
-      if (!data_[i][j].IsSet())
+      if (!data_[i*Size()+j].IsSet())
         return false;
     }
   }
@@ -258,8 +268,8 @@ void Sudoku::SolveFinnedFish(unsigned int size, unsigned int number) {
             continue;
           if (NumberOfSharedBlocks(std::make_pair(fin.second, fin.first),
                                    std::make_pair(j, k)) >= 1) {
-            data_[j][k] -= number;
-            if (data_[j][k].HasChanged()) {
+            data_[j*Size()+k] -= number;
+            if (data_[j*Size()+k].HasChanged()) {
               should_return = true;
             }
           }
@@ -300,8 +310,8 @@ void Sudoku::SolveFinnedFish(unsigned int size, unsigned int number) {
             continue;
           if (NumberOfSharedBlocks(std::make_pair(fin.first, fin.second),
                                    std::make_pair(k, j)) >= 1) {
-            data_[k][j] -= number;
-            if (data_[k][j].HasChanged()) {
+            data_[k*Size()+j] -= number;
+            if (data_[k*Size()+j].HasChanged()) {
               should_return = true;
             }
           }
@@ -388,4 +398,30 @@ std::istream &operator>>(std::istream &s, Sudoku &puzzle) {
   puzzle.debug_ = debug;
   return s;
 }
+
+std::unordered_set<BlockChecker *> Sudoku::ChangedBlocks(const std::vector<Square>&
+state) const {
+  std::unordered_set<BlockChecker *> result;
+  for (unsigned i = 0; i < Size(); i++) {
+    for (unsigned j = 0; j < Size(); j++) {
+      if (data_[i*Size()+j] != state[i*Size()+j]) {
+        for (auto &b : block_mapping_[i][j]) {
+          result.insert(b);
+        }
+      }
+    }
+  }
+  return result;
+}
+
+std::unordered_set<unsigned> Sudoku::RemovedNumbers(BlockChecker* block, const
+std::vector<Square>& state) const {
+  return block->RemovedNumbers(state, data_.data());
+}
+std::unordered_set<unsigned> Sudoku::ChangedSquares(BlockChecker* block, const
+std::vector<Square>& state) const {
+  return block->ChangedSquares(state, data_.data());
+}
+
+
 } // namespace sudoku

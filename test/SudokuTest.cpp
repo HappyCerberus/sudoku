@@ -14,7 +14,6 @@ TestGetMappings(Sudoku &s) {
   return s.block_mapping_;
 }
 
-
 void ClearSudoku(Sudoku &s) {
   for (unsigned i = 0; i < s.Size(); i++) {
     for (unsigned j = 0; j < s.Size(); j++) {
@@ -204,6 +203,53 @@ TEST_CASE("Sudoku : Finned Fish", "") {
   }
 
 }
+
+TEST_CASE("Sudoku : State", "[]") {
+  Sudoku test(9);
+  for (unsigned i = 0; i < 9; i++) {
+    for (unsigned j = 0; j < 9; j++) {
+      test[i][j] -= 4;
+    }
+  }
+
+  auto state = test.State();
+  for (unsigned i = 0; i < 9; i++) {
+    for (unsigned j = 0; j < 9; j++) {
+      REQUIRE(state[i*9+j].CountPossible() == 8);
+      for (unsigned k = 1; k <= 9; k++) {
+        if (k == 4) {
+          REQUIRE(!state[i*9+j].IsPossible(k));
+        } else {
+          REQUIRE(state[i*9+j].IsPossible(k));
+        }
+      }
+    }
+  }
+
+  REQUIRE(!test.HasChange(state));
+  test[0][0] -= 3;
+  REQUIRE(test.HasChange(state));
+
+  auto blocks = test.ChangedBlocks(state);
+  REQUIRE(blocks.size() == 3);
+
+  for (auto block : blocks) {
+    auto set = test.RemovedNumbers(block, state);
+    REQUIRE(set.size() == 1);
+    REQUIRE(*set.begin() == 3);
+  }
+
+  for (auto block : blocks) {
+    auto squares = test.ChangedSquares(block, state);
+    REQUIRE(squares.size() == 1);
+    REQUIRE(*squares.begin() == 0);
+  }
+}
+
+/*
+  std::unordered_set<unsigned> ChangedSquares(BlockChecker* block, const
+  std::vector<Square>& state) const;
+ */
 
 TEST_CASE("Sudoku : Solve test", "[debug]") {
   /*
