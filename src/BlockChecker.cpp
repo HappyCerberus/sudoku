@@ -189,12 +189,9 @@ void recursive_set_find(std::vector<unsigned> &result,
   auto check = [&changed_squares, size](const std::vector<sudoku::Square *>
       &elems,
                   const std::vector<unsigned> &set) -> bool {
-    bool found = false;
     for (unsigned x : set) {
       if (elems[x]->CountPossible() > size) return false;
-      if (changed_squares.contains(x)) found = true;
     }
-    if (!found) return false;
 
     sudoku::Square tmp_union(elems.size());
     tmp_union.ResetToEmpty();
@@ -241,7 +238,8 @@ void recursive_number_find_filtered(std::vector<unsigned> &result,
     bool found = false;
     for (unsigned x : set) {
       tmp_numbers += x + 1u;
-      if (numbers.contains(x+1u)) found = true;
+      if (numbers.find(x+1u)  != numbers.end())
+        found = true;
     }
     if (!found) return false;
 
