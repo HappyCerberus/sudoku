@@ -254,7 +254,12 @@ void Sudoku::SolveFinnedFish(unsigned int size, unsigned int number) {
                                std::make_pair(j, fin.first)) > 1) {
         bool should_return = false;
         for (unsigned k = 0; k < Size(); k++) {
-          if (k == fin.first)
+          bool skip = false;
+          for (auto x = b; x != e; x++) {
+            if (k == *x)
+              skip = true;
+          }
+          if (skip || k == fin.first)
             continue;
           if (NumberOfSharedBlocks(std::make_pair(fin.second, fin.first),
                                    std::make_pair(j, k)) >= 1) {
@@ -296,7 +301,12 @@ void Sudoku::SolveFinnedFish(unsigned int size, unsigned int number) {
                                std::make_pair(fin.first, j)) > 1) {
         bool should_return = false;
         for (unsigned k = 0; k < Size(); k++) {
-          if (k == fin.first)
+          bool skip = false;
+          for (auto x = b; x != e; x++) {
+            if (k == *x)
+              skip = true;
+          }
+          if (skip || k == fin.first)
             continue;
           if (NumberOfSharedBlocks(std::make_pair(fin.first, fin.second),
                                    std::make_pair(k, j)) >= 1) {

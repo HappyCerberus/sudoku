@@ -276,12 +276,9 @@ void BlockChecker::SolveNakedGroups(unsigned size) const {
       u += *elem_[result[x*size+y]];
     }
     for (unsigned j = 0; j < Size(); j++) {
-      bool skip = false;
-      for (unsigned y = 0; y < size; y++)
-        if (result[x*size+y] == j)
-          skip = true;
-      if (!skip)
+      if (elem_[j]->HasExtraPossibilities(u)) {
         (*elem_[j]) -= u;
+      }
     }
   }
 }

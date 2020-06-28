@@ -24,5 +24,38 @@ TEST_CASE("Solver : Test Solve", "x") {
   SolveStats stats;
   REQUIRE(SmartSolver::Solve(test3, stats));
 }
+/*
+TEST_CASE("Solver : Bad Solve", "[]") {
+  std::string puzzle =
+      "030085000625319700000002005000074100000250000700003002106030009008000010490500860\n";
+  std::string expected =
+      "934785621625319784817642395562974138341258976789163452156837249278496513493521867\n";
+  std::stringstream stream(puzzle);
+  Sudoku test(9);
+  stream >> test;
+  stream.str(expected);
+  Sudoku solution(9);
+  stream >> solution;
+  test.SetSolution(&solution);
+
+  std::stringstream out;
+
+  SolveStats stats;
+  auto res = SmartSolver::Solve(test, stats);
+  out.str("");
+  test.DebugPrint(out);
+  INFO(out.str());
+  CHECK(res);
+  for (unsigned i = 0; i < test.Size(); i++) {
+    for (unsigned j = 0; j < test.Size(); j++) {
+      out.str("");
+      test.DebugPrint(out);
+      INFO("Position " << i << " " << j << " " << i*test.Size()+j);
+      INFO(out.str());
+
+      CHECK(test[i][j].Value() == expected[i*test.Size()+j]-'0');
+    }
+  }
+}*/
 
 } // namespace sudoku
