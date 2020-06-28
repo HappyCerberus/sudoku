@@ -1,5 +1,4 @@
 #include <benchmark/benchmark.h>
-#include <functional>
 #include <random>
 
 template <typename T>
