@@ -230,6 +230,7 @@ void SolveOneSudoku(std::ifstream &f, int64_t line_number,
       incorrect++;
       std::cerr << "Incorrectly solved puzzle at line " << line_number + 1
                 << std::endl;
+      std::cerr << output << std::endl;
     }
   }
   output.clear();

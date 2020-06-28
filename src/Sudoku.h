@@ -94,6 +94,23 @@ public:
   // Removed move assignment operator.
   Sudoku &operator=(Sudoku &&) = delete;
 
+  void SetSolution(const Sudoku* solution) {
+    solution_ = solution;
+  }
+
+  bool CheckAgainstSolution() {
+    if (solution_ == nullptr) return true;
+
+    for (unsigned i = 0; i < Size(); i++) {
+      for (unsigned j = 0; j < Size(); j++) {
+        if (!data_[i][j].IsPossible(solution_->data_[i][j].Value()))
+          return false;
+      }
+    }
+
+    return true;
+  }
+
   /*! Square bracket operator to allow for 2D access.
    *
    * @param index Row index to return.
@@ -165,6 +182,7 @@ private:
   std::vector<std::vector<std::vector<BlockChecker *>>> block_mapping_;
   unsigned size_;
   std::string debug_;
+  const Sudoku* solution_;
 
   void SetupCheckers(unsigned size = 9, SudokuTypes type = BASIC);
 

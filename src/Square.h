@@ -129,6 +129,17 @@ public:
    */
   bool HasIntersection(const Square &r) const { return (data_ & r.data_) != 0; }
 
+  /*! Returns whether there are additional possibilities in the square other
+   *  than the ones given.
+   *
+   * @param r The given possibilities.
+   * @return True if the squares has additional possibilities. False
+   * otherwise.
+   */
+  constexpr bool HasExtraPossibilities(const Square &r) const noexcept {
+    return (data_ & r.data_) != data_;
+  }
+
   /*! Intersect this square with another.
    *
    * @param r Square to intersect with.
