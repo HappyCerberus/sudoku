@@ -18,15 +18,15 @@ public:
   // No default constructor.
   Square() = delete;
   // Default copy constructor.
-  Square(const Square &r) = default;
+  constexpr Square(const Square &r) noexcept = default;
   // Default move constructor.
-  Square(Square &&r) = default;
+  constexpr Square(Square &&r) noexcept = default;
 
   /*! Construct a square with all possibilities present
    *
    * @param max_value Maximum number to support {9, 16, 25, 36, 49, 64}
    */
-  explicit Square(unsigned max_value = 9)
+  constexpr explicit Square(unsigned max_value = 9) noexcept
       : data_(~((~ZERO64) << static_cast<uint64_t>(max_value))), orig_(ZERO64),
         max_(static_cast<uint8_t>(max_value)){
     assert(max_value <= 64);
@@ -36,7 +36,7 @@ public:
    *
    * @param max_value Maximum number to support {9, 16, 25, 36, 49, 64}
    */
-  explicit Square(size_t max_value = 9)
+  constexpr explicit Square(size_t max_value = 9) noexcept
       : Square(static_cast<unsigned>(max_value)){};
 
   /*! Return whether the given number is available as possibility
@@ -44,7 +44,7 @@ public:
    * @param number The number to check.
    * @return True if still available, Fals if not.
    */
-  bool IsPossible(unsigned number) const {
+  constexpr bool IsPossible(unsigned number) const noexcept {
     return (data_ & SingleBit(number)) != 0;
   }
 
@@ -52,7 +52,7 @@ public:
    *
    * @return Number of possibilities.
    */
-  unsigned CountPossible() const {
+  constexpr unsigned CountPossible() const noexcept {
     unsigned result = 0;
     for (unsigned i = 1; i <= static_cast<unsigned>(max_); i++) {
       if (IsPossible(i))
@@ -65,13 +65,13 @@ public:
    *
    * @return True if only one possibility is present, false otherwise.
    */
-  bool IsSet() const { return CountPossible() == 1; }
+  constexpr bool IsSet() const noexcept { return CountPossible() == 1; }
 
   /*! Returns the set value.
    *
    * @return 0 if not set, the single possibility otherwise.
    */
-  unsigned Value() const {
+  constexpr unsigned Value() const noexcept {
     if (CountPossible() != 1)
       return 0;
     for (unsigned i = 1; i <= static_cast<unsigned>(max_); i++) {
@@ -87,7 +87,7 @@ public:
    * @param number The starting number to search from.
    * @return 0 if none other are possible, next possibility otherwise.
    */
-  unsigned Next(unsigned number) const {
+  constexpr unsigned Next(unsigned number) const noexcept {
     for (unsigned i = number + 1; i <= static_cast<unsigned>(max_); i++) {
       if (IsPossible(i))
         return i;
@@ -98,7 +98,7 @@ public:
   /*! Resets the square to contain all possibilities.
    *
    */
-  void Reset() {
+  constexpr void Reset() noexcept {
     data_ = ~((~ZERO64) << static_cast<uint64_t>(max_));
     orig_ = ZERO64;
   }
@@ -106,20 +106,20 @@ public:
   /*! Resets the square to contain zero possibilities.
    *
    */
-  void ResetToEmpty() {
+  constexpr void ResetToEmpty() noexcept {
     data_ = ZERO64;
   }
 
   /*! Mark the square as not changed.
    *
    */
-  void ResetChanged() { orig_ = data_; }
+  constexpr void ResetChanged() noexcept { orig_ = data_; }
 
   /*! Returns whether the square has changed since last ResetChanged().
    *
    * @return True if changed, False if not.
    */
-  bool HasChanged() const { return orig_ != data_; }
+  constexpr bool HasChanged() const noexcept { return orig_ != data_; }
 
   /*! Returns whether there is a possibility intersection with the given square.
    *
@@ -127,7 +127,9 @@ public:
    * @return True if the squares intersect in at least one possibility. False
    * otherwise.
    */
-  bool HasIntersection(const Square &r) const { return (data_ & r.data_) != 0; }
+  constexpr bool HasIntersection(const Square &r) const noexcept {
+    return (data_ & r.data_) != 0;
+  }
 
   /*! Returns whether there are additional possibilities in the square other
    *  than the ones given.
@@ -145,7 +147,7 @@ public:
    * @param r Square to intersect with.
    * @return this
    */
-  Square &operator&=(const Square &r) {
+  constexpr Square &operator&=(const Square &r) noexcept {
     data_ &= r.data_;
     return *this;
   }
@@ -155,21 +157,21 @@ public:
    * @param r Square to intersect with.
    * @return the intersection result.
    */
-  Square operator&(const Square &r) const {
+  constexpr Square operator&(const Square &r) const noexcept{
     Square result(*this);
     result.data_ &= r.data_;
     return result;
   }
 
   // Default assignment operator.
-  Square &operator=(const Square &r) = default;
+  constexpr Square &operator=(const Square &r) noexcept= default;
 
   /*! Reset the content of the square to contain only one possibility.
    *
    * @param number The possibility to reset to.
    * @return this
    */
-  Square &operator=(unsigned number) {
+  constexpr Square &operator=(unsigned number) noexcept{
     data_ = SingleBit(number);
     return *this;
   }
@@ -179,7 +181,7 @@ public:
    * @param number Number to add, indexed from 1.
    * @return this
    */
-  Square &operator+=(unsigned number) {
+  constexpr Square &operator+=(unsigned number) noexcept {
     data_ |= SingleBit(number);
     return *this;
   }
@@ -189,7 +191,7 @@ public:
    * @param number Number to add, indexed from 1.
    * @return A new Square with the possiblity added.
    */
-  Square operator+(unsigned number) const {
+  constexpr Square operator+(unsigned number) const noexcept {
     Square result(*this);
     result.data_ |= SingleBit(number);
     return result;
@@ -200,7 +202,7 @@ public:
    * @param r Square to union with.
    * @return this
    */
-  Square &operator+=(Square r) {
+  constexpr Square &operator+=(Square r) noexcept {
     data_ |= r.data_;
     return *this;
   }
@@ -210,7 +212,7 @@ public:
    * @param r Square to union with.
    * @return A new Square with the resulting union.
    */
-  Square operator+(Square r) const {
+  constexpr Square operator+(Square r) const noexcept {
     Square result(*this);
     result.data_ |= r.data_;
     return result;
@@ -221,7 +223,7 @@ public:
    * @param number Number to remove.
    * @return this
    */
-  Square &operator-=(unsigned number) {
+  constexpr Square &operator-=(unsigned number) noexcept {
     data_ &= ~SingleBit(number);
     return *this;
   }
@@ -231,7 +233,7 @@ public:
    * @param number Number to remove.
    * @return A new Square with the number removed.
    */
-  Square operator-(unsigned number) const {
+  constexpr Square operator-(unsigned number) const noexcept {
     Square result(*this);
     result.data_ &= ~SingleBit(number);
     return result;
@@ -242,7 +244,7 @@ public:
    * @param r The square with posibilities to be removed.
    * @return this
    */
-  Square &operator-=(Square r) {
+  constexpr Square &operator-=(Square r) noexcept {
     data_ &= ~r.data_;
     return *this;
   }
@@ -252,7 +254,7 @@ public:
    * @param r The square with posibilities to be removed.
    * @return A new Square with the possibilites removed.
    */
-  Square operator-(Square r) const {
+  constexpr Square operator-(Square r) const noexcept {
     Square result(*this);
     result.data_ &= ~r.data_;
     return result;
@@ -264,7 +266,7 @@ public:
    * @return True if both squares contain the same possibilities, False
    * otherwise.
    */
-  bool operator ==(const Square& r) const {
+  constexpr bool operator ==(const Square& r) const noexcept {
     return data_ == r.data_;
   }
 
@@ -276,11 +278,11 @@ public:
   std::string DebugString() const;
 
 private:
-  void OverrideValue(uint64_t data) {
+  constexpr void OverrideValue(uint64_t data) noexcept {
     data_ = data;
   }
 
-  static uint64_t SingleBit(unsigned number) {
+  constexpr static uint64_t SingleBit(unsigned number) noexcept {
     return (static_cast<uint64_t>(1)
             << (static_cast<uint64_t>(number) - static_cast<uint64_t>(1)));
   }
