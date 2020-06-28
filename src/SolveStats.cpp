@@ -10,14 +10,14 @@
 #include <sstream>
 
 const char *FISH_NAMES[] = {
-    nullptr,
-    nullptr,
-    "X-Wing",
-    "Swordfish",
-    "Jellyfish",
-    "Squirmbag"
-    "Whale",
-    "Leviathan",
+    nullptr,        // 0
+    nullptr,        // 1
+    "X-Wing",       // 2
+    "Swordfish",    // 3
+    "Jellyfish",    // 4
+    "Squirmbag",    // 5
+    "Whale",        // 6
+    "Leviathan",    // 7
     nullptr
 };
 SolveStats &SolveStats::operator+=(const SolveStats &stats) {

@@ -30,26 +30,31 @@ Previous live streams:
 * Version 9 : https://www.youtube.com/watch?v=tTQywLiZ9sk
 * Version 10: https://www.youtube.com/watch?v=JLhMUNtEJoY
 * Version 11: https://www.youtube.com/watch?v=muoFClZMEsQ
+* Version 12: https://www.youtube.com/watch?v=D1WXQlXBE4c
+* Version 13: https://www.youtube.com/watch?v=naaq102wGX4
+* Version 14: https://www.youtube.com/watch?v=k1C8PTeFuDM
+* Version 15: https://www.youtube.com/watch?v=KUlmMBJ86o0
 
 ## Current Benchmark results
 
 The following data set is used for the benchmark: https://www.kaggle.com/rohanrao/sudoku
 
 ```
-Benchmark results: 	Solved 8920361 out of 9000001 requested.
-Out of the solved 135 were determined to be incorrect
+Benchmark results:      Solved 8895861 out of 9000001 requested.
+Out of the solved 0 were determined to be incorrect
 Solver stats {
-	Groups: (1 : 34111982)(2 : 96463)(3 : 3015)(4 : 50)
-	Intersections: 53463
-	Fish rules: 
-		X-Wing : 11457
-		Swordfish : 1712
-		Jellyfish : 15
-	Finned Fish rules: 
-		Finned X-Wing : 70165
-		Finned Swordfish : 14118
-		Finned Jellyfish : 3985
-		Finned SquirmbagWhale : 1358
-		Finned Leviathan : 453
+        Groups: (1 : 34352974)(2 : 80749)(3 : 2189)(4 : 29)
+        Intersections: 37972
+        Fish rules:
+                X-Wing : 6682
+                Swordfish : 933
+                Jellyfish : 17
+        Finned Fish rules:
+                Finned X-Wing : 37351
+                Finned Swordfish : 11860
+                Finned Jellyfish : 4076
+                Finned Squirmbag : 1196
+                Finned Whale : 276
+                Finned Leviathan : 27
 };
 ```
