@@ -18,7 +18,7 @@ public:
   // No default constructor.
   Square() = delete;
   // Default copy constructor.
-  constexpr Square(const Square &r) = default;
+  Square(const Square &r) = default;
   // Default move constructor.
   Square(Square &&r) = default;
 
@@ -28,7 +28,7 @@ public:
    */
   explicit Square(unsigned max_value = 9)
       : data_(~((~ZERO64) << static_cast<uint64_t>(max_value))), orig_(ZERO64),
-        max_(static_cast<uint8_t>(max_value)) {
+        max_(static_cast<uint8_t>(max_value)){
     assert(max_value <= 64);
   }
 
@@ -106,7 +106,9 @@ public:
   /*! Resets the square to contain zero possibilities.
    *
    */
-  void ResetToEmpty() { data_ = ZERO64; }
+  void ResetToEmpty() {
+    data_ = ZERO64;
+  }
 
   /*! Mark the square as not changed.
    *
@@ -125,20 +127,7 @@ public:
    * @return True if the squares intersect in at least one possibility. False
    * otherwise.
    */
-  constexpr bool HasIntersection(const Square &r) const noexcept {
-    return (data_ & r.data_) != 0;
-  }
-
-  /*! Returns whether there are additional possibilities in the square other
-   * than the ones given.
-   *
-   * @param r The given possibilities.
-   * @return True if the squares has additional possibilities. False
-   * otherwise.
-   */
-  constexpr bool HasExtraPossibilities(const Square &r) const noexcept {
-    return (data_ & r.data_) != data_;
-  }
+  bool HasIntersection(const Square &r) const { return (data_ & r.data_) != 0; }
 
   /*! Intersect this square with another.
    *
@@ -264,7 +253,9 @@ public:
    * @return True if both squares contain the same possibilities, False
    * otherwise.
    */
-  bool operator==(const Square &r) const { return data_ == r.data_; }
+  bool operator ==(const Square& r) const {
+    return data_ == r.data_;
+  }
 
   /*! Compare two sudoku squares.
    *
@@ -272,7 +263,9 @@ public:
    * @return False if both squares contain the same possibilities, True
    * otherwise.
    */
-  bool operator!=(const Square &r) const { return data_ != r.data_; }
+  bool operator !=(const Square& r) const {
+    return data_ != r.data_;
+  }
 
   /*! Generate a debug a string representing the possibilities in the square.
    *
@@ -282,7 +275,9 @@ public:
   std::string DebugString() const;
 
 private:
-  void OverrideValue(uint64_t data) { data_ = data; }
+  void OverrideValue(uint64_t data) {
+    data_ = data;
+  }
 
   static uint64_t SingleBit(unsigned number) {
     return (static_cast<uint64_t>(1)
