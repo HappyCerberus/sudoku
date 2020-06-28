@@ -399,7 +399,7 @@ state, const Square *base_pointer) const {
   for (size_t i = 0; i < elem_.size(); i++) {
     size_t offset = static_cast<size_t>(elem_[i]-base_pointer);
     if (state[offset] != *elem_[i]) {
-      result.insert(i);
+      result.insert(static_cast<unsigned>(i));
     }
   }
   return result;
@@ -417,12 +417,9 @@ changed_squares) const {
       u += *elem_[result[x*size+y]];
     }
     for (unsigned j = 0; j < Size(); j++) {
-      bool skip = false;
-      for (unsigned y = 0; y < size; y++)
-        if (result[x*size+y] == j)
-          skip = true;
-      if (!skip)
+      if (elem_[j]->HasExtraPossibilities(u)) {
         (*elem_[j]) -= u;
+      }
     }
   }
 }

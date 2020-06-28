@@ -5,7 +5,7 @@
 #include "SmartSolver.h"
 
 std::vector<sudoku::Square> EmptyState(unsigned size) {
-  return std::vector<sudoku::Square>(size*size, sudoku::Square(size));
+  return std::vector<sudoku::Square>(size * size, sudoku::Square(size));
 }
 
 bool SmartSolver::Solve(sudoku::Sudoku &sudoku, SolveStats &stats) {
@@ -19,9 +19,8 @@ bool SmartSolver::Solve(sudoku::Sudoku &sudoku, SolveStats &stats) {
     auto changed_blocks = sudoku.ChangedBlocks();
     if (changed_blocks.size() == 0) {
       return false;
-      }
+    }
     sudoku.ResetChange();
-
 
     SolveGroups(1, sudoku, stats, groups[0]);
     SolveGroups(2, sudoku, stats, groups[1]);
@@ -159,5 +158,3 @@ void SmartSolver::SolveGroups(unsigned int size, sudoku::Sudoku &sudoku,
 
   state = std::move(stored);
 }
-
-
