@@ -181,31 +181,6 @@ void recursive_set_find(std::vector<unsigned> &result,
   generic_nonrecursive_find<sudoku::Square>(result, squares, size, check);
 }
 
-
-void recursive_set_find(std::vector<unsigned> &result,
-                        const std::vector<sudoku::Square *> &squares,
-                        const std::unordered_set<unsigned>& changed_squares,
-                        unsigned size) {
-  auto check = [&changed_squares, size](const std::vector<sudoku::Square *>
-      &elems,
-                  const std::vector<unsigned> &set) -> bool {
-    bool found = false;
-    for (unsigned x : set) {
-      if (elems[x]->CountPossible() > size) return false;
-      if (changed_squares.contains(x)) found = true;
-    }
-    if (!found) return false;
-
-    sudoku::Square tmp_union(elems.size());
-    tmp_union.ResetToEmpty();
-    for (unsigned x : set) {
-      tmp_union += *elems[x];
-    }
-    return tmp_union.CountPossible() == set.size();
-  };
-  generic_nonrecursive_find<sudoku::Square>(result, squares, size, check);
-}
-
 // if X possibilities only appear in X squares, then those squares can't
 // contain any other numbers
 void recursive_number_find(std::vector<unsigned> &result,
@@ -218,32 +193,6 @@ void recursive_number_find(std::vector<unsigned> &result,
     for (unsigned x : set) {
       tmp_numbers += x + 1u;
     }
-
-    size_t count_squares = 0;
-    for (unsigned x = 0; x < elems.size(); x++) {
-      if (elems[x]->HasIntersection(tmp_numbers))
-        count_squares++;
-    }
-
-    return count_squares == set.size();
-  };
-  generic_nonrecursive_find<sudoku::Square>(result, squares, size, check);
-}
-
-void recursive_number_find_filtered(std::vector<unsigned> &result,
-                           const std::vector<sudoku::Square *> &squares,
-                           const std::unordered_set<unsigned>& numbers,
-                           unsigned size) {
-  auto check = [&numbers](const std::vector<sudoku::Square *> &elems,
-                  const std::vector<unsigned> &set) -> bool {
-    sudoku::Square tmp_numbers(elems.size());
-    tmp_numbers.ResetToEmpty();
-    bool found = false;
-    for (unsigned x : set) {
-      tmp_numbers += x + 1u;
-      if (numbers.contains(x+1u)) found = true;
-    }
-    if (!found) return false;
 
     size_t count_squares = 0;
     for (unsigned x = 0; x < elems.size(); x++) {
@@ -360,73 +309,6 @@ void BlockChecker::SolveHiddenGroups(unsigned size) const {
 bool BlockChecker::HasNumberAtPosition(unsigned number, unsigned position)
     const {
   return elem_[position]->IsPossible(number);
-}
-
-std::unordered_set<unsigned> BlockChecker::RemovedNumbers(const std::vector<Square>&
-state, const Square *base_pointer) const {
-  std::unordered_set<unsigned> result;
-  for (auto i : elem_) {
-    size_t offset = static_cast<size_t>(i-base_pointer);
-    Square diff = state[offset] - *i;
-    unsigned next = 0;
-    while ((next = diff.Next(next)) != 0) {
-      result.insert(next);
-    }
-  }
-  return result;
-}
-
-void BlockChecker::SolveHiddenGroups(unsigned size, const
-                                     std::unordered_set<unsigned>&
-removed_numbers) const {
-  std::vector<unsigned> result;
-  recursive_number_find_filtered(result, elem_, removed_numbers, size);
-  for (size_t x = 0; x < result.size()/size; x++) {
-    Square u(Size());
-    u.ResetToEmpty();
-    for (unsigned y = 0; y < size; y++) {
-      u += result[x*size+y] + 1u;
-    }
-    for (unsigned j = 0; j < Size(); j++) {
-      if (elem_[j]->HasIntersection(u)) {
-        (*elem_[j]) &= u;
-      }
-    }
-  }
-}
-
-std::unordered_set<unsigned> BlockChecker::ChangedSquares(const std::vector<Square>&
-state, const Square *base_pointer) const {
-  std::unordered_set<unsigned> result;
-  for (size_t i = 0; i < elem_.size(); i++) {
-    size_t offset = static_cast<size_t>(elem_[i]-base_pointer);
-    if (state[offset] != *elem_[i]) {
-      result.insert(i);
-    }
-  }
-  return result;
-}
-
-void BlockChecker::SolveNakedGroups(unsigned size,
-                                    const std::unordered_set<unsigned>&
-changed_squares) const {
-  std::vector<unsigned> result;
-  recursive_set_find(result, elem_, changed_squares, size);
-  for (size_t x = 0; x < result.size()/size; x++) {
-    Square u(Size());
-    u.ResetToEmpty();
-    for (unsigned y = 0; y < size; y++) {
-      u += *elem_[result[x*size+y]];
-    }
-    for (unsigned j = 0; j < Size(); j++) {
-      bool skip = false;
-      for (unsigned y = 0; y < size; y++)
-        if (result[x*size+y] == j)
-          skip = true;
-      if (!skip)
-        (*elem_[j]) -= u;
-    }
-  }
 }
 
 } // namespace sudoku

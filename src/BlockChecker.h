@@ -92,15 +92,6 @@ public:
    * @param size Size of the group to look for.
    */
   void SolveHiddenGroups(unsigned size) const;
-
-  /*! Solve the block for hidden groups of a given size. Filtered by removed
-   * numbers from the last state.
-   *
-   * @param size Size of the group to look for.
-   */
-  void SolveHiddenGroups(unsigned size, const std::unordered_set<unsigned>&
-      removed_numbers) const;
-
   //! Solve the block for naked groups.
   void SolveNakedGroups() const;
 
@@ -109,34 +100,6 @@ public:
    * @param size Size of the group to look for.
    */
   void SolveNakedGroups(unsigned int size) const;
-
-  /*! Solve the block for naked groups of a given size. Filtered by the
-   * changed squares.
-   *
-   * @param size Size of the group to look for.
-   */
-  void SolveNakedGroups(unsigned int size, const
-                        std::unordered_set<unsigned>& changed_squares) const;
-
-  /*! Get the removed numbers from this block, since the give state dump.
-   *
-   * @param state State dump.
-   * @param base_pointer Base pointer to Sudoku puzzle data, used to
-   * determine Square index.
-   * @return Set of removed numbers.
-   */
-  std::unordered_set<unsigned> RemovedNumbers(const std::vector<Square>&
-      state, const Square *base_pointer) const;
-
-  /*! Get the changed squares from this block, since the give state dump.
-   *
-   * @param state State dump.
-   * @param base_pointer Base pointer to Sudoku puzzle data, used to
-   * determine Square index.
-   * @return Set of changed squares.
-   */
-  std::unordered_set<unsigned> ChangedSquares(const std::vector<Square>&
-  state, const Square *base_pointer) const;
 
 private:
   SudokuBlockType elem_;

@@ -11,9 +11,6 @@
 class SmartSolver {
 public:
   static bool Solve(sudoku::Sudoku &sudoku, SolveStats &stats);
-  static void SolveGroups(unsigned size, sudoku::Sudoku &sudoku, SolveStats
-                                                                     &stats,
-                          std::vector<sudoku::Square>& state);
 };
 
 #endif // SUDOKU_SOLVER_H

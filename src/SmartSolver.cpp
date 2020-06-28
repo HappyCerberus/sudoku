@@ -4,17 +4,7 @@
 
 #include "SmartSolver.h"
 
-std::vector<sudoku::Square> EmptyState(unsigned size) {
-  return std::vector<sudoku::Square>(size*size, sudoku::Square(size));
-}
-
 bool SmartSolver::Solve(sudoku::Sudoku &sudoku, SolveStats &stats) {
-  std::vector<sudoku::Square> groups[4];
-  groups[0] = EmptyState(sudoku.Size());
-  groups[1] = EmptyState(sudoku.Size());
-  groups[2] = EmptyState(sudoku.Size());
-  groups[3] = EmptyState(sudoku.Size());
-
   while (!sudoku.IsSet()) {
     auto changed_blocks = sudoku.ChangedBlocks();
     if (changed_blocks.size() == 0) {
@@ -22,8 +12,25 @@ bool SmartSolver::Solve(sudoku::Sudoku &sudoku, SolveStats &stats) {
     }
     sudoku.ResetChange();
 
-    SolveGroups(1, sudoku, stats, groups[0]);
-    SolveGroups(2, sudoku, stats, groups[1]);
+    for (auto &block : changed_blocks) {
+      block->SolveHiddenGroups(1);
+      block->SolveNakedGroups(1);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.groups[1]++;
+      continue;
+    }
+
+    for (auto &block : sudoku.Blocks()) {
+      block.SolveHiddenGroups(2);
+      block.SolveNakedGroups(2);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.groups[2]++;
+      continue;
+    }
 
     // Intersecting blocks rule
     for (auto &block : sudoku.Blocks()) {
@@ -37,7 +44,15 @@ bool SmartSolver::Solve(sudoku::Sudoku &sudoku, SolveStats &stats) {
       continue;
     }
 
-    SolveGroups(3, sudoku, stats, groups[2]);
+    for (auto &block : sudoku.Blocks()) {
+      block.SolveHiddenGroups(3);
+      block.SolveNakedGroups(3);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.groups[3]++;
+      continue;
+    }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveFish(2u, j);
@@ -48,7 +63,15 @@ bool SmartSolver::Solve(sudoku::Sudoku &sudoku, SolveStats &stats) {
       continue;
     }
 
-    SolveGroups(4, sudoku, stats, groups[3]);
+    for (auto &block : sudoku.Blocks()) {
+      block.SolveHiddenGroups(4);
+      block.SolveNakedGroups(4);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.groups[4]++;
+      continue;
+    }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveFish(3u, j);
@@ -154,24 +177,3 @@ bool SmartSolver::Solve(sudoku::Sudoku &sudoku, SolveStats &stats) {
 
   return sudoku.IsSet();
 }
-void SmartSolver::SolveGroups(unsigned int size, sudoku::Sudoku &sudoku,
-                              SolveStats &stats,
-                              std::vector<sudoku::Square> &state) {
-  auto changed_blocks = sudoku.ChangedBlocks(state);
-  for (auto &block : changed_blocks) {
-    auto removed_numbers = sudoku.RemovedNumbers(block, state);
-    if (removed_numbers.size() != 0)
-      block->SolveHiddenGroups(size, removed_numbers);
-    auto interesting_squares = sudoku.ChangedSquares(block, state);
-    if (interesting_squares.size() != 0)
-      block->SolveNakedGroups(size, interesting_squares);
-  }
-
-  if (sudoku.HasChange(state)) {
-    stats.groups[size-1]++;
-  }
-
-  state = sudoku.State();
-}
-
-
