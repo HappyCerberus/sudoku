@@ -3,6 +3,7 @@
 //
 
 #include "SmartSolver.h"
+#include <iostream>
 
 bool SmartSolver::Solve(sudoku::Sudoku &sudoku, SolveStats &stats) {
   while (!sudoku.IsSet()) {
@@ -63,6 +64,15 @@ bool SmartSolver::Solve(sudoku::Sudoku &sudoku, SolveStats &stats) {
       continue;
     }
 
+    for (unsigned j = 1; j <= sudoku.Size(); j++) {
+      sudoku.SolveXChains(4u, j);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.xchains[4u]++;
+      continue;
+    }
+
     for (auto &block : sudoku.Blocks()) {
       block.SolveHiddenGroups(4);
       block.SolveNakedGroups(4);
@@ -88,6 +98,20 @@ bool SmartSolver::Solve(sudoku::Sudoku &sudoku, SolveStats &stats) {
 
     if (sudoku.HasChange()) {
       stats.finned_fish[2]++;
+      continue;
+    }
+
+    if (sudoku.HasChange()) {
+      stats.fish[6]++;
+      continue;
+    }
+
+    for (unsigned j = 1; j <= sudoku.Size(); j++) {
+      sudoku.SolveXChains(6u, j);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.xchains[6]++;
       continue;
     }
 
@@ -122,11 +146,6 @@ bool SmartSolver::Solve(sudoku::Sudoku &sudoku, SolveStats &stats) {
       sudoku.SolveFish(6u, j);
     }
 
-    if (sudoku.HasChange()) {
-      stats.fish[6]++;
-      continue;
-    }
-
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveFish(7u, j);
     }
@@ -137,11 +156,29 @@ bool SmartSolver::Solve(sudoku::Sudoku &sudoku, SolveStats &stats) {
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
+      sudoku.SolveXChains(8u, j);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.xchains[8]++;
+      continue;
+    }
+
+    for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveFinnedFish(4u, j);
     }
 
     if (sudoku.HasChange()) {
       stats.finned_fish[4]++;
+      continue;
+    }
+
+    for (unsigned j = 1; j <= sudoku.Size(); j++) {
+      sudoku.SolveXChains(10u, j);
+    }
+
+    if (sudoku.HasChange()) {
+      stats.xchains[10]++;
       continue;
     }
 

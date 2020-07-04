@@ -23,7 +23,7 @@ void ClearSudoku(Sudoku &s) {
   }
 }
 
-SudokuBlockType &TestGetBlockData(BlockChecker &s) { return s.elem_; }
+std::vector<::sudoku::Square *> &TestGetBlockData(BlockChecker &s) { return s.elem_; }
 
 TEST_CASE("Sudoku : Test Checkers", "x") {
   std::string small = "4  0  0   0  0  8   0  0  3 \n"
@@ -268,6 +268,169 @@ TEST_CASE("Sudoku : Finned Fish Debug", "[debug]") {
 
   test.SolveFinnedFish(4, 8);
 
+  for (unsigned i = 0; i < 9; i++) {
+    for (unsigned j = 0; j < 9; j++) {
+      INFO(i << j);
+      CHECK(test[i][j] == expect[i][j]);
+    }
+  }
+}
+
+TEST_CASE("Sudoku : Prune from chain", "[]") {
+  Sudoku test(9);
+  Sudoku expect(9);
+  for (unsigned i = 0; i < 9; i++) {
+    for (unsigned j = 0; j < 9; j++) {
+      test[i][j] -= 8;
+      expect[i][j] -= 8;
+    }
+  }
+
+  for (unsigned i = 0; i < 9; i++) {
+    test[i][1] += 8;
+  }
+  test[1][6] += 8;
+
+  expect[1][6] += 8;
+  expect[1][1] += 8;
+  expect[5][1] += 8;
+  expect[8][1] += 8;
+
+  std::vector<unsigned> path;
+  path.push_back(8*9+1);
+  path.push_back(1*9+6);
+  path.push_back(5*9+1);
+  path.push_back(1*9+1);
+
+  test.PruneNumbersSeenFrom(path, 8);
+  for (unsigned i = 0; i < 9; i++) {
+    for (unsigned j = 0; j < 9; j++) {
+      INFO(i << j);
+      CHECK(test[i][j] == expect[i][j]);
+    }
+  }
+}
+
+TEST_CASE("Sudoku : Solve Chain Test A", "[]") {
+  Sudoku test(9);
+  Sudoku expect(9);
+  for (unsigned i = 0; i < 9; i++) {
+    for (unsigned j = 0; j < 9; j++) {
+      test[i][j] -= 7;
+      expect[i][j] -= 7;
+    }
+  }
+
+  test[0][1] += 7;
+  test[0][8] += 7;
+  test[1][0] += 7;
+  test[1][1] += 7;
+  test[1][7] += 7;
+  test[1][8] += 7;
+  test[2][4] += 7;
+  test[3][0] += 7;
+  test[3][1] += 7;
+  test[3][2] += 7;
+  test[4][3] += 7;
+  test[5][6] += 7;
+  test[6][0] += 7;
+  test[6][2] += 7;
+  test[6][7] += 7;
+  test[6][8] += 7;
+  test[7][0] += 7;
+  test[7][1] += 7;
+  test[7][8] += 7;
+  test[8][5] += 7;
+
+  expect[0][1] += 7;
+  expect[0][8] += 7;
+  expect[1][0] += 7;
+  expect[1][1] += 7;
+  expect[1][7] += 7;
+  expect[1][8] += 7;
+  expect[2][4] += 7;
+  expect[3][0] += 7;
+  expect[3][2] += 7;
+  expect[4][3] += 7;
+  expect[5][6] += 7;
+  expect[6][0] += 7;
+  expect[6][2] += 7;
+  expect[6][7] += 7;
+  expect[6][8] += 7;
+  expect[7][0] += 7;
+  expect[7][1] += 7;
+  expect[7][8] += 7;
+  expect[8][5] += 7;
+
+  test.SolveXChains(6, 7);
+  for (unsigned i = 0; i < 9; i++) {
+    for (unsigned j = 0; j < 9; j++) {
+      INFO(i << j);
+      CHECK(test[i][j] == expect[i][j]);
+    }
+  }
+}
+
+TEST_CASE("Sudoku : Solve Chain Test B", "[]") {
+  Sudoku test(9);
+  Sudoku expect(9);
+  for (unsigned i = 0; i < 9; i++) {
+    for (unsigned j = 0; j < 9; j++) {
+      test[i][j] -= 3;
+      expect[i][j] -= 3;
+    }
+  }
+
+  test[0][3] += 3;
+  test[1][6] += 3;
+  test[2][1] += 3;
+  test[2][2] += 3;
+  test[3][1] += 3;
+  test[3][7] += 3;
+  test[4][5] += 3;
+  test[4][7] += 3;
+  test[4][8] += 3;
+  test[5][0] += 3;
+  test[5][1] += 3;
+  test[5][2] += 3;
+  test[5][4] += 3;
+  test[5][8] += 3;
+  test[6][4] += 3;
+  test[6][5] += 3;
+  test[6][8] += 3;
+  test[7][0] += 3;
+  test[7][1] += 3;
+  test[7][2] += 3;
+  test[7][5] += 3;
+  test[7][7] += 3;
+  test[8][0] += 3;
+  test[8][2] += 3;
+  test[8][5] += 3;
+
+  expect[0][3] += 3;
+  expect[1][6] += 3;
+  expect[2][1] += 3;
+  expect[2][2] += 3;
+  expect[3][1] += 3;
+  expect[3][7] += 3;
+  expect[4][5] += 3;
+  expect[4][7] += 3;
+  expect[4][8] += 3;
+  expect[5][4] += 3;
+  expect[5][8] += 3;
+  expect[6][4] += 3;
+  expect[6][5] += 3;
+  expect[6][8] += 3;
+  expect[7][0] += 3;
+  expect[7][1] += 3;
+  expect[7][2] += 3;
+  expect[7][5] += 3;
+  expect[7][7] += 3;
+  expect[8][0] += 3;
+  expect[8][2] += 3;
+  expect[8][5] += 3;
+
+  test.SolveXChains(6, 3);
   for (unsigned i = 0; i < 9; i++) {
     for (unsigned j = 0; j < 9; j++) {
       INFO(i << j);

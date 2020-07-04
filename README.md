@@ -40,21 +40,23 @@ Previous live streams:
 The following data set is used for the benchmark: https://www.kaggle.com/rohanrao/sudoku
 
 ```
-Benchmark results:      Solved 8895861 out of 9000001 requested.
+Benchmark results:      Solved 8909310 out of 9000001 requested.
 Out of the solved 0 were determined to be incorrect
 Solver stats {
-        Groups: (1 : 34352974)(2 : 80749)(3 : 2189)(4 : 29)
-        Intersections: 37972
+        Groups: (1 : 33866835)(2 : 89631)(3 : 2612)(4 : 14)
+        Intersections: 43829
         Fish rules:
-                X-Wing : 6682
-                Swordfish : 933
-                Jellyfish : 17
+                X-Wing : 8552
+                Swordfish : 223
+                Jellyfish : 6
         Finned Fish rules:
-                Finned X-Wing : 37351
-                Finned Swordfish : 11860
-                Finned Jellyfish : 4076
-                Finned Squirmbag : 1196
-                Finned Whale : 276
-                Finned Leviathan : 27
+                Finned X-Wing : 1392
+                Finned Swordfish : 283
+                Finned Jellyfish : 73
+                Finned Squirmbag : 17
+        XChains rules:
+                XChain of size 4 : 63118
+                XChain of size 6 : 2043
+                XChain of size 8 : 57
 };
 ```

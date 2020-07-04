@@ -7,7 +7,7 @@
 
 namespace sudoku {
 
-BlockChecker::BlockChecker(const SudokuBlockType &elements) : elem_(elements) {}
+BlockChecker::BlockChecker(const std::vector<::sudoku::Square *> &elements) : elem_(elements) {}
 
 bool BlockChecker::HasConflict() const {
   std::vector<bool> present(elem_.size(), false);
@@ -143,7 +143,7 @@ void generic_nonrecursive_find(
         continue;
       }
     } else {
-      for (unsigned i = static_cast<unsigned>(path.size()); i < size; i++) {
+      for (auto i = static_cast<unsigned>(path.size()); i < size; i++) {
         path.push_back(path[i - 1] + 1);
       }
       if (is_valid_set(elems, path)) {

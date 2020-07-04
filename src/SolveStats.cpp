@@ -31,6 +31,9 @@ SolveStats &SolveStats::operator+=(const SolveStats &stats) {
   for (auto v : stats.finned_fish) {
     finned_fish[v.first] += v.second;
   }
+  for (auto v : stats.xchains) {
+    xchains[v.first] += v.second;
+  }
 
   return *this;
 }
@@ -68,6 +71,18 @@ std::ostream &operator<<(std::ostream &s, const SolveStats &stats) {
       }
       v = stats.finned_fish.at(i);
       s << "\t\t" << "Finned " << FISH_NAMES[i] << " : " << v << std::endl;
+    }
+  }
+  header = true;
+  for (unsigned i = 4; i <= 24; i+=2) {
+    unsigned v = 0u;
+    if (stats.xchains.find(i) != stats.xchains.end()) {
+      if (header) {
+        s << "\tXChains rules: " << std::endl;
+        header = false;
+      }
+      v = stats.xchains.at(i);
+      s << "\t\t" << "XChain of size " << i << " : " << v << std::endl;
     }
   }
   s << "};" << std::endl;

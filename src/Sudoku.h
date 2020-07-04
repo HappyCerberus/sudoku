@@ -6,12 +6,12 @@
 #include "Square.h"
 #include <cstdint>
 #include <iosfwd>
+#include <set>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 enum SudokuTypes { BASIC = 1, DIAGONAL = 2 };
-
-typedef std::vector<std::vector<sudoku::Square>> SudokuDataType;
 
 namespace sudoku {
 class Sudoku;
@@ -69,6 +69,12 @@ private:
   friend class Sudoku;
 };
 
+struct ChainsGraph {
+  std::vector<unsigned> nodes;
+  std::unordered_multimap<unsigned, unsigned> weak_links;
+  std::unordered_multimap<unsigned, unsigned> strong_links;
+};
+
 class Sudoku {
 public:
   /*! Construct an empty Sudoku of the given size and type.
@@ -77,13 +83,6 @@ public:
    * @param type BASIC or DIAGONAL
    */
   Sudoku(unsigned size = 9, SudokuTypes type = BASIC);
-
-  /*! Construct a pre-filled Sudoku fo the given type. Size inferred from data.
-   *
-   * @param data Data to pre-fill the puzzle with.
-   * @param type BASIC or DIAGONAL.
-   */
-  Sudoku(SudokuDataType data, SudokuTypes type = BASIC);
 
   // Removed copy constructor.
   Sudoku(const Sudoku &) = delete;
@@ -94,6 +93,14 @@ public:
   // Removed move assignment operator.
   Sudoku &operator=(Sudoku &&) = delete;
 
+  /*! Build a strong/weak link graph of number possibilities
+   *
+   * @return The built graph.
+   */
+  ChainsGraph GetChains(unsigned number) const;
+
+  void PruneNumbersSeenFrom(const std::vector<unsigned>& path, unsigned number);
+
   void SetSolution(const Sudoku* solution) {
     solution_ = solution;
   }
@@ -103,7 +110,7 @@ public:
 
     for (unsigned i = 0; i < Size(); i++) {
       for (unsigned j = 0; j < Size(); j++) {
-        if (!data_[i][j].IsPossible(solution_->data_[i][j].Value()))
+        if (!data_[i*Size() + j].IsPossible(solution_->data_[i*Size() + j].Value()))
           return false;
       }
     }
@@ -117,7 +124,7 @@ public:
    * @return A wrapper object around a row in the puzzle.
    */
   SudokuRow operator[](unsigned index) {
-    return SudokuRow(data_[index].data(), Size());
+    return SudokuRow(&data_[index*Size()], Size());
   }
   /*! Square bracket operator to allow for 2D access.
    *
@@ -125,7 +132,7 @@ public:
    * @return A const wrapper object around a row in the puzzle.
    */
   ConstSudokuRow operator[](unsigned index) const {
-    return ConstSudokuRow(data_[index].data(), Size());
+    return ConstSudokuRow(&data_[index*Size()], Size());
   }
 
   /*! Return whether there is a changed square in the puzzle.
@@ -174,11 +181,15 @@ public:
   //! Solve finned fish for a given size and a number.
   void SolveFinnedFish(unsigned size, unsigned number);
 
+  //! Solve X chains for a given length and a number.
+  void SolveXChains(unsigned length, unsigned number);
+
+
 private:
   std::vector<BlockChecker> checks_;
   std::vector<BlockChecker *> row_checks_;
   std::vector<BlockChecker *> col_checks_;
-  SudokuDataType data_;
+  std::vector<sudoku::Square> data_;
   std::vector<std::vector<std::vector<BlockChecker *>>> block_mapping_;
   unsigned size_;
   std::string debug_;

@@ -7,8 +7,6 @@
 #include <unordered_set>
 #include <vector>
 
-typedef std::vector<::sudoku::Square *> SudokuBlockType;
-
 namespace sudoku {
 class BlockChecker {
 public:
@@ -19,7 +17,11 @@ public:
    *
    * @param elements Pointers to squares.
    */
-  BlockChecker(const SudokuBlockType &elements);
+  BlockChecker(const std::vector<Square *> &elements);
+
+  Square* GetSquare(unsigned pos) const {
+    return elem_[pos];
+  }
 
   /*! Check whether block has a conflict (number appears multiple times)
    *  Works for partially filled blocks.
@@ -101,10 +103,12 @@ public:
    */
   void SolveNakedGroups(unsigned int size) const;
 
-private:
-  SudokuBlockType elem_;
 
-  friend SudokuBlockType &TestGetBlockData(BlockChecker &s);
+
+private:
+  std::vector<Square *> elem_;
+
+  friend std::vector<Square *> &TestGetBlockData(BlockChecker &s);
 };
 
 void recursive_set_find(std::vector<unsigned> &result,
