@@ -182,6 +182,13 @@ bool SmartSolver::Solve(sudoku::Sudoku &sudoku, SolveStats &stats) {
       continue;
     }
 
+    sudoku.SolveXYChains();
+
+    if (sudoku.HasChange()) {
+      stats.xychains++;
+      continue;
+    }
+
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveFinnedFish(5u, j);
     }

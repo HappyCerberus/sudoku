@@ -439,6 +439,65 @@ TEST_CASE("Sudoku : Solve Chain Test B", "[]") {
   }
 }
 
+
+TEST_CASE("Sudoku : Solve XY Chain Test A", "[]") {
+  Sudoku test(9);
+  Sudoku expect(9);
+  for (unsigned i = 0; i < 9; i++) {
+    for (unsigned j = 0; j < 9; j++) {
+      test[i][j].ResetToEmpty();
+      expect[i][j].ResetToEmpty();
+    }
+  }
+
+  test[1][3] += 3;
+  test[1][4] += 2;
+  test[1][5] += 2;
+  test[1][5] += 3;
+  test[1][8] += 3;
+  test[2][3] += 3;
+  test[2][5] += 8;
+  test[2][7] += 3;
+  test[4][3] += 8;
+  test[4][3] += 9;
+  test[4][4] += 9;
+  test[4][5] += 2;
+  test[4][5] += 8;
+  test[6][3] += 3;
+  test[6][3] += 9;
+  test[6][4] += 9;
+  test[6][5] += 3;
+  test[7][7] += 3;
+  test[7][8] += 3;
+
+
+  expect[1][4] += 2;
+  expect[1][5] += 2;
+  expect[1][5] += 3;
+  expect[1][8] += 3;
+  expect[2][5] += 8;
+  expect[2][7] += 3;
+  expect[4][3] += 8;
+  expect[4][3] += 9;
+  expect[4][4] += 9;
+  expect[4][5] += 2;
+  expect[4][5] += 8;
+  expect[6][3] += 3;
+  expect[6][3] += 9;
+  expect[6][4] += 9;
+  expect[7][7] += 3;
+  expect[7][8] += 3;
+
+  test.SolveXYChains();
+  for (unsigned i = 0; i < 9; i++) {
+    for (unsigned j = 0; j < 9; j++) {
+      INFO(i << j);
+      CHECK(test[i][j] == expect[i][j]);
+    }
+  }
+}
+
+
 TEST_CASE("Sudoku : Solve test", "[debug]") {
   /*
   std::string puzzle = "000000700080200039507900620005060097600000810900001046700000050009002060460108070";

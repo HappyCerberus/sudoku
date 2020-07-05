@@ -427,7 +427,7 @@ std::istream &operator>>(std::istream &s, Sudoku &puzzle) {
   return s;
 }
 
-void dfs_traverse(const ChainsGraph& g, unsigned length,
+void Sudoku::dfs_traverse(const ChainsGraph& g, unsigned length,
                   const std::function<void(const std::vector<unsigned>&)> &cb,
                   std::vector<unsigned> &path, bool weak) {
   if (path.size() == length) {
@@ -457,7 +457,7 @@ void dfs_traverse(const ChainsGraph& g, unsigned length,
   }
 }
 
-void dfs_traverse(const ChainsGraph& g, unsigned length,
+void Sudoku::dfs_traverse(const ChainsGraph& g, unsigned length,
                   const std::function<void(const std::vector<unsigned>&)> &cb) {
   std::vector<unsigned> path;
   for (auto n : g.nodes) {
@@ -473,6 +473,77 @@ void Sudoku::SolveXChains(unsigned length, unsigned number) {
     this->PruneNumbersSeenFrom(path, number);
   };
   dfs_traverse(graph, length, cb);
+}
+
+void Sudoku::dfs_traverse(const std::vector<ChainsGraph>& g, const
+                      std::function<void
+    (const std::vector<unsigned>&)> &cb, std::vector<unsigned> &path,
+                  unsigned number, unsigned next_number) {
+  if (next_number == number) {
+    cb(path);
+    return;
+  }
+
+  unsigned node = path[path.size()-1];
+  std::pair<std::unordered_multimap<unsigned,unsigned>::const_iterator,
+      std::unordered_multimap<unsigned,unsigned>::const_iterator> range;
+
+  range = g[next_number-1].weak_links.equal_range(node);
+  for (auto i = range.first; i != range.second; i++) {
+    bool found = false;
+    for (auto j : path) {
+      if (j == i->second) found = true;
+    }
+    if (found) continue;
+
+    if (data_[i->second].CountPossible() != 2) continue;
+
+    // what is the other number in the square != source_number
+    unsigned next = 0;
+    while ((next = data_[i->second].Next(next)) == next_number);
+    if (next == 0) {
+      abort(); // something completely broken
+    }
+
+    path.push_back(i->second);
+    dfs_traverse(g, cb, path, number, next);
+    path.pop_back();
+  }
+}
+
+void Sudoku::dfs_traverse(const std::vector<ChainsGraph>& g, const std::function<void(const
+                                                                 std::vector<unsigned>&)> &cb,
+                  unsigned number) {
+  std::vector<unsigned> path;
+  for (auto n : g[number-1].nodes) {
+    if (data_[n].CountPossible() == 2) {
+      path.push_back(n);
+      // what is the other number in the square != source_number
+      unsigned next = 0;
+      while ((next = data_[n].Next(next)) == number);
+      if (next == 0) {
+        abort(); // something completely broken
+      }
+      dfs_traverse(g, cb, path, number, next);
+      path.pop_back();
+    }
+  }
+}
+
+void Sudoku::SolveXYChains() {
+  std::vector<ChainsGraph> graphs;
+  for (unsigned i = 1; i <= Size(); i++) {
+    graphs.push_back(GetChains(i));
+  }
+
+  MakeCopy();
+  for (unsigned number = 1; number <= Size(); number++) {
+    auto cb = [this, number](const std::vector<unsigned> &path) {
+      this->PruneNumbersSeenFromInCopy(path, number);
+    };
+    dfs_traverse(graphs, cb, number);
+  }
+  SwapCopy();
 }
 
 void Sudoku::PruneNumbersSeenFrom(const std::vector<unsigned>& path, unsigned
@@ -504,6 +575,42 @@ void Sudoku::PruneNumbersSeenFrom(const std::vector<unsigned>& path, unsigned
       if (skip) continue;
       if (bs.find(s->GetSquare(i)) != bs.end()) {
         (*s->GetSquare(i)) -= number;
+      }
+    }
+  }
+}
+
+void Sudoku::PruneNumbersSeenFromInCopy(const std::vector<unsigned>& path,
+                                      unsigned
+number) {
+  unsigned begin = path[0];
+  unsigned end = path[path.size()-1];
+
+  const auto &bb = block_mapping_[begin/Size()][begin%Size()];
+  const auto &be = block_mapping_[end/Size()][end%Size()];
+
+  std::unordered_set<Square *> bs;
+  for (auto s : bb) {
+    for (unsigned i = 0; i < Size(); i++) {
+      bool skip = false;
+      for (auto j : path) {
+        if (&data_[j] == s->GetSquare(i)) skip = true;
+      }
+      if (skip) continue;
+      bs.insert(s->GetSquare(i));
+    }
+  }
+
+  for (auto s : be) {
+    for (unsigned i = 0; i < Size(); i++) {
+      bool skip = false;
+      for (auto j : path) {
+        if (&data_[j] == s->GetSquare(i)) skip = true;
+      }
+      if (skip) continue;
+      if (bs.find(s->GetSquare(i)) != bs.end()) {
+        Square *to_prune = s->GetSquare(i);
+        data_copy_[static_cast<size_t>(to_prune - &data_[0])] -= number;
       }
     }
   }

@@ -1,9 +1,17 @@
-/* (c) 2020 RNDr. Simon Toth (happy.cerberus@gmail.com) */
+/* (c) 2020 RNDr. Simon Toth (happy.cerberus@gmail.com)
+ *
+ * Human-like Sudoku solver.
+ *
+ * This solver employs human solving techniques to solve Sudoku puzzles and
+ * does not employ any backtracking or any other form of guessing.
+ */
 
 #include "SolveStats.h"
 #include "Square.h"
 #include "Sudoku.h"
 
+#include "Progressbar.h"
+#include "SmartSolver.h"
 #include <chrono>
 #include <ctime>
 #include <fstream>
@@ -11,7 +19,8 @@
 #include <sstream>
 #include <unordered_map>
 #include <vector>
-#include "SmartSolver.h"
+#include <chrono>
+#include <thread>
 
 // Ultimate goal:
 // Sudoku generator, that understands how humans solve Sudoku.
@@ -38,151 +47,17 @@ void SolveOneSudoku(std::ifstream &f, int64_t line_number,
 //   solving (this would help testing)
 // - cleanup interface on BlockChecker & Sudoku
 
-int simple_puzzles() {
-
-  std::string sudoku_9x9 = "4  0  0   0  0  8   0  0  3 \n"
-                           "0  0  5   2  0  0   0  1  0 \n"
-                           "0  6  0   0  0  9   0  0  0 \n"
-                           "\n"
-                           "0  0  0   0  0  0   0  3  0 \n"
-                           "0  0  6   9  0  1   0  0  0 \n"
-                           "0  0  0   6  0  4   9  2  0 \n"
-                           "\n"
-                           "0  2  9   0  0  0   3  0  0 \n"
-                           "0  0  4   0  0  2   0  8  5 \n"
-                           "0  0  0   7  0  3   0  0  0 ";
-
-  std::string sudoku_16x16 =
-      "*  9  *  *   *  *  C  *   *  *  *  *   *  *  *  *"
-      "*  D  *  *   *  E  6  *   1  *  *  9   *  4  *  A"
-      "*  *  F  5   *  *  *  *   8  6  *  *   1  7  C  9"
-      "*  *  C  *   *  *  *  4   3  0  5  7   D  *  B  E"
-      "*  *  *  *   *  *  *  6   *  1  *  A   *  *  *  F"
-      "*  *  *  *   *  *  9  *   C  *  *  6   *  *  A  *"
-      "*  6  *  *   8  *  F  *   *  *  D  *   *  *  *  *"
-      "*  4  *  *   D  5  *  1   *  *  B  *   *  C  *  *"
-      "*  0  *  *   3  C  *  *   7  *  9  5   B  A  *  *"
-      "D  5  *  4   *  *  *  9   0  *  *  F   *  *  *  6"
-      "8  *  *  7   *  *  E  *   *  *  *  *   5  *  *  2"
-      "*  F  *  2   *  *  *  7   *  *  3  *   C  *  D  *"
-      "*  *  B  F   *  *  1  A   5  *  4  *   0  *  *  C"
-      "*  1  *  E   *  0  5  *   *  B  7  *   *  *  9  8"
-      "C  7  *  6   E  *  8  *   *  *  *  *   *  *  *  3"
-      "*  *  5  A   *  *  *  B   *  E  *  8   6  *  2  *";
-
-  {
-    std::stringstream stream(sudoku_9x9);
-    sudoku::Sudoku test(9);
-    stream >> test;
-
-    // record start time
-    auto start = std::chrono::system_clock::now();
-
-    SolveStats stats;
-    if (!SmartSolver::Solve(test, stats)) {
-      std::cout << "There is something very wrong!" << std::endl;
-    }
-
-    std::cout << stats;
-
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<double> diff = end - start;
-    std::cout << "Time to smart solve 9x9 sudoku " << diff.count()
-              << " "
-                 "s\n";
-    std::cout << test << std::endl;
-  }
-
-  std::vector<std::string> puzzles{std::string{"5  0  0   0  0  0   0  6  0 \n"
-                                               "0  0  2   0  0  0   0  0  1 \n"
-                                               "0  1  0   0  0  0   5  0  0 \n"
-                                               "\n"
-                                               "0  8  0   0  0  5   3  0  0 \n"
-                                               "9  0  0   2  0  0   0  0  0 \n"
-                                               "0  0  6   0  4  0   0  0  7 \n"
-                                               "\n"
-                                               "0  3  0   0  0  9   8  0  0 \n"
-                                               "6  0  0   1  0  0   0  3  0 \n"
-                                               "0  0  5   0  7  0   0  0  4 "},
-                                   std::string{"0  0  0   3  0  0   0  0  9 \n"
-                                               "0  0  0   0  2  0   0  3  0 \n"
-                                               "0  0  0   0  0  7   2  0  0 \n"
-                                               "\n"
-                                               "1  0  0   0  0  9   8  0  0 \n"
-                                               "0  0  7   4  0  0   0  0  0 \n"
-                                               "0  3  0   0  6  0   0  5  0 \n"
-                                               "\n"
-                                               "0  4  0   0  5  0   0  6  0 \n"
-                                               "8  0  0   0  0  3   1  0  0 \n"
-                                               "0  0  2   9  0  0   3  0  5 "},
-                                   std::string{"7  0  0   0  0  5   0  0  8 \n"
-                                               "0  0  1   2  0  0   0  9  0 \n"
-                                               "0  6  0   0  3  0   1  0  0 \n"
-                                               "\n"
-                                               "0  8  0   0  0  0   2  0  0 \n"
-                                               "2  0  0   0  0  0   0  0  4 \n"
-                                               "0  0  9   0  0  0   0  8  0 \n"
-                                               "\n"
-                                               "5  0  0   0  0  7   0  0  9 \n"
-                                               "0  1  0   0  8  0   6  0  0 \n"
-                                               "0  0  0   4  0  0   0  3  0 "},
-                                   std::string{"0  0  9   0  0  6   0  1  0 \n"
-                                               "0  7  0   2  0  0   3  0  0 \n"
-                                               "5  6  0   0  4  0   0  0  7 \n"
-                                               "\n"
-                                               "2  0  0   0  8  0   0  0  0 \n"
-                                               "0  0  5   0  0  1   0  6  0 \n"
-                                               "0  3  0   9  0  0   7  0  0 \n"
-                                               "\n"
-                                               "9  0  0   0  0  0   0  0  5 \n"
-                                               "0  4  0   0  0  0   9  0  0 \n"
-                                               "0  0  8   0  0  0   0  4  0 "},
-                                   std::string{"0  0  3   0  0  5   0  0  9 \n"
-                                               "9  0  0   2  0  0   0  6  0 \n"
-                                               "0  8  0   0  4  0   7  0  0 \n"
-                                               "\n"
-                                               "0  0  7   0  0  0   0  0  2 \n"
-                                               "0  2  0   0  0  0   1  0  0 \n"
-                                               "6  0  0   0  0  0   0  7  0 \n"
-                                               "\n"
-                                               "0  4  0   0  8  0   6  0  0 \n"
-                                               "0  0  0   1  0  0   0  5  0 \n"
-                                               "0  0  9   0  0  7   0  0  3 "}};
-
-  for (auto &sudoku : puzzles) {
-    std::stringstream stream(sudoku);
-    sudoku::Sudoku test(9);
-    stream >> test;
-
-    // record start time
-    auto start = std::chrono::system_clock::now();
-
-    SolveStats stats;
-    if (!SmartSolver::Solve(test, stats)) {
-      std::cout << "There is something very wrong!" << std::endl;
-    }
-
-    std::cout << stats;
-
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<double> diff = end - start;
-    std::cout << "Time to smart solve 9x9 sudoku " << diff.count()
-              << " "
-                 "s\n";
-    std::cout << test << std::endl;
-    test.DebugPrint(std::cout);
-  }
-
-  return 0;
-}
-
 int run_benchmark(std::ifstream& f, int64_t count) {
   SolveStats global_stats;
   uint64_t solved = 0;
   uint64_t incorrect = 0;
 
-  for (int64_t i = 0; i < count; i++) {
-    SolveOneSudoku(f, i, global_stats, solved, incorrect);
+  {
+    Progressbar x(count, std::cout, 79u);
+    for (int64_t i = 0; i < count; i++) {
+      SolveOneSudoku(f, i, global_stats, solved, incorrect);
+      x.Step(1);
+    }
   }
 
   std::cout << "Benchmark results: \t"
@@ -197,6 +72,7 @@ int run_benchmark(std::ifstream& f, int64_t count) {
 
   return 0;
 }
+
 void SolveOneSudoku(std::ifstream &f, int64_t line_number,
                     SolveStats &global_stats, uint64_t &solved,
                     uint64_t &incorrect) {
@@ -232,9 +108,27 @@ void SolveOneSudoku(std::ifstream &f, int64_t line_number,
                 << std::endl;
       std::cerr << output << std::endl;
     }
-  }
+  }/* else {
+    std::cerr << std::endl;
+    std::cerr << "Unsolved puzzle at line " << line_number << std::endl;
+    std::cerr << output << std::endl;
+  }*/
   output.clear();
 }
+
+void SolveOneSudokuWithoutSolution(std::ifstream &f, int64_t line_number,
+                    SolveStats &global_stats, uint64_t &solved,
+                    uint64_t &incorrect) {
+  SolveStats stats;
+  sudoku::Sudoku s(9, BASIC);
+  f >> s;
+
+  if (SmartSolver::Solve(s, stats)) {
+    solved++;
+    global_stats += stats;
+  }
+}
+
 std::ifstream &seekLines(int64_t offset, std::ifstream &f) {
   std::string line;
   line.reserve(256);
@@ -292,6 +186,35 @@ int run_benchmark(const char *filename) {
   return 0;
 }
 
+int run_benchmark_no_solutions(const char *filename) {
+  std::ifstream f(filename);
+  if (!f.is_open()) {
+    std::cerr << "Failed to open file " << filename << std::endl;
+  }
+
+  SolveStats global_stats;
+  uint64_t solved = 0;
+  uint64_t incorrect = 0;
+
+  int64_t line = 0;
+  while (!f.bad() && !f.eof()) {
+    SolveOneSudokuWithoutSolution(f, line, global_stats, solved, incorrect);
+    line++;
+  }
+
+  std::cout << "Benchmark results: \t"
+               "Solved "
+            << solved << " out of " << line-1 <<
+            " requested.\n"
+            "Out of the solved "
+            << incorrect
+            << " were determined to be "
+               "incorrect\n";
+  std::cout << global_stats;
+
+  return 0;
+}
+
 int run_benchmark(const char *filename, const char *offset,
                   const char *puzzle_count) {
   char *end = nullptr;
@@ -311,12 +234,12 @@ int run_benchmark(const char *filename, const char *offset,
 }
 
 int main(int argc, char *argv[]) {
-  if (argc == 1) {
-    return simple_puzzles();
-  }
-
   if (argc == 2) {
     return run_benchmark(argv[1]);
+  }
+
+  if (argc == 3) {
+    return run_benchmark_no_solutions(argv[1]);
   }
 
   // filename offset count

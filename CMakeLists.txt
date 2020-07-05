@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 3.15)
 project(sudoku CXX)
 set(CMAKE_CXX_STANDARD 20)
 include(cmake/StandardProjectSettings.cmake)
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)

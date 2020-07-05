@@ -35,6 +35,8 @@ SolveStats &SolveStats::operator+=(const SolveStats &stats) {
     xchains[v.first] += v.second;
   }
 
+  xychains += stats.xychains;
+
   return *this;
 }
 std::ostream &operator<<(std::ostream &s, const SolveStats &stats) {
@@ -49,6 +51,7 @@ std::ostream &operator<<(std::ostream &s, const SolveStats &stats) {
   }
   s << std::endl;
   s << "\tIntersections: " << stats.block_intersections << std::endl;
+  s << "\tXYChains: " << stats.xychains << std::endl;
   bool header = true;
   for (unsigned i = 2; i <= 7; i++) {
     unsigned v = 0u;

@@ -5,6 +5,8 @@
 #include "BlockChecker.h"
 #include "Square.h"
 #include <cstdint>
+#include <cstring>
+#include <functional>
 #include <iosfwd>
 #include <set>
 #include <unordered_map>
@@ -99,7 +101,15 @@ public:
    */
   ChainsGraph GetChains(unsigned number) const;
 
+  /*! Build a weak link graph of squares with two possibilities.
+   *
+   * @return The built graph.
+   */
+   ChainsGraph GetPairChains() const;
+
   void PruneNumbersSeenFrom(const std::vector<unsigned>& path, unsigned number);
+  void PruneNumbersSeenFromInCopy(const std::vector<unsigned>& path, unsigned
+                                                                    number);
 
   void SetSolution(const Sudoku* solution) {
     solution_ = solution;
@@ -184,16 +194,27 @@ public:
   //! Solve X chains for a given length and a number.
   void SolveXChains(unsigned length, unsigned number);
 
+  //! Solve XY chains for a given number.
+  void SolveXYChains();
+
 
 private:
   std::vector<BlockChecker> checks_;
   std::vector<BlockChecker *> row_checks_;
   std::vector<BlockChecker *> col_checks_;
   std::vector<sudoku::Square> data_;
+  std::vector<sudoku::Square> data_copy_;
   std::vector<std::vector<std::vector<BlockChecker *>>> block_mapping_;
   unsigned size_;
   std::string debug_;
   const Sudoku* solution_;
+
+  void MakeCopy() { data_copy_ = data_;}
+  void SwapCopy() {
+    for (unsigned i = 0; i < Size()*Size(); i++) {
+      data_[i] = data_copy_[i];
+    }
+  }
 
   void SetupCheckers(unsigned size = 9, SudokuTypes type = BASIC);
 
@@ -204,6 +225,22 @@ private:
                   std::vector<unsigned>::const_iterator begin,
                                       std::vector<unsigned>::const_iterator end,
                   unsigned number) const;
+
+  void dfs_traverse(const std::vector<ChainsGraph>& g, const std::function<void
+      (const std::vector<unsigned>&)> &cb, std::vector<unsigned> &path,
+                    unsigned number, unsigned next_number);
+
+  void dfs_traverse(const std::vector<ChainsGraph>& g, const std::function<void(const
+                                                              std::vector<unsigned>&)> &cb,
+               unsigned number);
+
+  void dfs_traverse(const ChainsGraph& g, unsigned length,
+                    const std::function<void(const std::vector<unsigned>&)>
+                        &cb);
+
+  void dfs_traverse(const ChainsGraph& g, unsigned length,
+                    const std::function<void(const std::vector<unsigned>&)> &cb,
+                    std::vector<unsigned> &path, bool weak);
 
   friend std::vector<std::vector<std::vector<BlockChecker *>>> &
   TestGetMappings(Sudoku &s);
