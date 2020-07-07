@@ -5,6 +5,7 @@
 #include "Progressbar.h"
 #include <iomanip>
 #include <ostream>
+#include <algorithm>
 
 Progressbar::Progressbar(int total_count, std::ostream &s, int width)
     : count_(total_count), width_(width), progress_(0), s_(s) {

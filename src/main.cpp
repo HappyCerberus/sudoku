@@ -53,7 +53,7 @@ int run_benchmark(std::ifstream& f, int64_t count) {
   uint64_t incorrect = 0;
 
   {
-    Progressbar x(count, std::cout, 79u);
+    Progressbar x(static_cast<int>(count), std::cout, 79u);
     for (int64_t i = 0; i < count; i++) {
       SolveOneSudoku(f, i, global_stats, solved, incorrect);
       x.Step(1);
@@ -115,7 +115,7 @@ void SolveOneSudoku(std::ifstream &f, int64_t line_number,
   }*/
   output.clear();
 }
-
+/*
 void SolveOneSudokuWithoutSolution(std::ifstream &f, int64_t line_number,
                     SolveStats &global_stats, uint64_t &solved,
                     uint64_t &incorrect) {
@@ -128,7 +128,7 @@ void SolveOneSudokuWithoutSolution(std::ifstream &f, int64_t line_number,
     global_stats += stats;
   }
 }
-
+*/
 std::ifstream &seekLines(int64_t offset, std::ifstream &f) {
   std::string line;
   line.reserve(256);
@@ -185,7 +185,7 @@ int run_benchmark(const char *filename) {
 
   return 0;
 }
-
+/*
 int run_benchmark_no_solutions(const char *filename) {
   std::ifstream f(filename);
   if (!f.is_open()) {
@@ -214,7 +214,7 @@ int run_benchmark_no_solutions(const char *filename) {
 
   return 0;
 }
-
+*/
 int run_benchmark(const char *filename, const char *offset,
                   const char *puzzle_count) {
   char *end = nullptr;
@@ -238,9 +238,9 @@ int main(int argc, char *argv[]) {
     return run_benchmark(argv[1]);
   }
 
-  if (argc == 3) {
-    return run_benchmark_no_solutions(argv[1]);
-  }
+//  if (argc == 3) {
+//    return run_benchmark_no_solutions(argv[1]);
+//  }
 
   // filename offset count
   if (argc == 4) {

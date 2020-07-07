@@ -180,6 +180,8 @@ BENCHMARK_CAPTURE(BM_find_v2, non_recursive,
 
 class RandomData : public benchmark::Fixture {
 public:
+  using benchmark::Fixture::TearDown;
+  using benchmark::Fixture::SetUp;
   void SetUp(benchmark::State &state) override {
     size_t size = static_cast<size_t>(state.range());
     random_numbers_.reserve(size);
