@@ -107,9 +107,7 @@ public:
    */
    ChainsGraph GetPairChains() const;
 
-  void PruneNumbersSeenFrom(const std::vector<unsigned>& path, unsigned number);
-  void PruneNumbersSeenFromInCopy(const std::vector<unsigned>& path, unsigned
-                                                                    number);
+  bool PruneNumbersSeenFrom(const std::vector<unsigned>& path, unsigned number);
 
   void SetSolution(const Sudoku* solution) {
     solution_ = solution;
@@ -226,11 +224,12 @@ private:
                                       std::vector<unsigned>::const_iterator end,
                   unsigned number) const;
 
-  void dfs_traverse(const std::vector<ChainsGraph>& g, const std::function<void
+  bool dfs_traverse(const std::vector<ChainsGraph>& g, const std::function<bool
       (const std::vector<unsigned>&)> &cb, std::vector<unsigned> &path,
                     unsigned number, unsigned next_number);
 
-  void dfs_traverse(const std::vector<ChainsGraph>& g, const std::function<void(const
+  bool dfs_traverse(const std::vector<ChainsGraph>& g, const std::function<bool
+                                                                           (const
                                                               std::vector<unsigned>&)> &cb,
                unsigned number);
 

@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <iostream>
 #include <ostream>
+#include <iterator>
 #include <unordered_map>
 
 namespace sudoku {
@@ -165,9 +166,9 @@ void Sudoku::SolveFish(unsigned int size, unsigned int number) {
     }
     for (auto r : rows) {
       auto b = result.begin();
-      advance(b, i*size);
+      std::advance(b, static_cast<std::vector<unsigned>::difference_type>(i*size));
       auto e = result.begin();
-      advance(e, (i+1)*size);
+      std::advance(e, static_cast<std::vector<unsigned>::difference_type>((i+1)*size));
       GetRowBlocks()[r]->Prune(number, b, e);
     }
   }
@@ -184,9 +185,9 @@ void Sudoku::SolveFish(unsigned int size, unsigned int number) {
     // Remove the number from everywhere except the rows in set
     for (auto r : cols) {
       auto b = result.begin();
-      advance(b, i*size);
+      advance(b, static_cast<std::vector<unsigned>::difference_type>(i*size));
       auto e = result.begin();
-      advance(e, (i+1)*size);
+      advance(e, static_cast<std::vector<unsigned>::difference_type>((i+1)*size));
       GetColBlocks()[r]->Prune(number, b, e);
     }
   }
@@ -228,9 +229,9 @@ void Sudoku::SolveFinnedFish(unsigned int size, unsigned int number) {
 
     // this is a true or a fake fin
     auto b = result.begin();
-    advance(b, i*size);
+    advance(b, static_cast<std::vector<unsigned>::difference_type>(i*size));
     auto e = result.begin();
-    advance(e, (i+1)*size);
+    advance(e, static_cast<std::vector<unsigned>::difference_type>((i+1)*size));
     auto fin = GetFin(GetColBlocks(), b, e, number);
 
     // this is a true or a fake fin
@@ -278,9 +279,9 @@ void Sudoku::SolveFinnedFish(unsigned int size, unsigned int number) {
 
     // this is a true or a fake fin
     auto b = result.begin();
-    advance(b, i*size);
+    advance(b, static_cast<std::vector<unsigned>::difference_type>(i*size));
     auto e = result.begin();
-    advance(e, (i+1)*size);
+    advance(e, static_cast<std::vector<unsigned>::difference_type>((i+1)*size)) ;
     auto fin = GetFin(GetRowBlocks(), b, e, number);
 
     // this is a true or a fake fin
@@ -475,13 +476,12 @@ void Sudoku::SolveXChains(unsigned length, unsigned number) {
   dfs_traverse(graph, length, cb);
 }
 
-void Sudoku::dfs_traverse(const std::vector<ChainsGraph>& g, const
-                      std::function<void
+bool Sudoku::dfs_traverse(const std::vector<ChainsGraph>& g, const
+                      std::function<bool
     (const std::vector<unsigned>&)> &cb, std::vector<unsigned> &path,
                   unsigned number, unsigned next_number) {
   if (next_number == number) {
-    cb(path);
-    return;
+    return cb(path);
   }
 
   unsigned node = path[path.size()-1];
@@ -506,12 +506,15 @@ void Sudoku::dfs_traverse(const std::vector<ChainsGraph>& g, const
     }
 
     path.push_back(i->second);
-    dfs_traverse(g, cb, path, number, next);
+    if (dfs_traverse(g, cb, path, number, next))
+      return true;
     path.pop_back();
   }
+  return false;
 }
 
-void Sudoku::dfs_traverse(const std::vector<ChainsGraph>& g, const std::function<void(const
+bool Sudoku::dfs_traverse(const std::vector<ChainsGraph>& g, const
+                          std::function<bool(const
                                                                  std::vector<unsigned>&)> &cb,
                   unsigned number) {
   std::vector<unsigned> path;
@@ -524,10 +527,12 @@ void Sudoku::dfs_traverse(const std::vector<ChainsGraph>& g, const std::function
       if (next == 0) {
         abort(); // something completely broken
       }
-      dfs_traverse(g, cb, path, number, next);
+      if (dfs_traverse(g, cb, path, number, next))
+        return true;
       path.pop_back();
     }
   }
+  return false;
 }
 
 void Sudoku::SolveXYChains() {
@@ -536,23 +541,23 @@ void Sudoku::SolveXYChains() {
     graphs.push_back(GetChains(i));
   }
 
-  MakeCopy();
   for (unsigned number = 1; number <= Size(); number++) {
-    auto cb = [this, number](const std::vector<unsigned> &path) {
-      this->PruneNumbersSeenFromInCopy(path, number);
+    auto cb = [this, number](const std::vector<unsigned> &path) -> bool {
+      return this->PruneNumbersSeenFrom(path, number);
     };
-    dfs_traverse(graphs, cb, number);
+    if (dfs_traverse(graphs, cb, number)) return;
   }
-  SwapCopy();
 }
 
-void Sudoku::PruneNumbersSeenFrom(const std::vector<unsigned>& path, unsigned
+bool Sudoku::PruneNumbersSeenFrom(const std::vector<unsigned>& path, unsigned
                                                                          number) {
   unsigned begin = path[0];
   unsigned end = path[path.size()-1];
 
   const auto &bb = block_mapping_[begin/Size()][begin%Size()];
   const auto &be = block_mapping_[end/Size()][end%Size()];
+
+  bool modified = false;
 
   std::unordered_set<Square *> bs;
   for (auto s : bb) {
@@ -575,45 +580,12 @@ void Sudoku::PruneNumbersSeenFrom(const std::vector<unsigned>& path, unsigned
       if (skip) continue;
       if (bs.find(s->GetSquare(i)) != bs.end()) {
         (*s->GetSquare(i)) -= number;
+        modified = true;
       }
     }
   }
-}
 
-void Sudoku::PruneNumbersSeenFromInCopy(const std::vector<unsigned>& path,
-                                      unsigned
-number) {
-  unsigned begin = path[0];
-  unsigned end = path[path.size()-1];
-
-  const auto &bb = block_mapping_[begin/Size()][begin%Size()];
-  const auto &be = block_mapping_[end/Size()][end%Size()];
-
-  std::unordered_set<Square *> bs;
-  for (auto s : bb) {
-    for (unsigned i = 0; i < Size(); i++) {
-      bool skip = false;
-      for (auto j : path) {
-        if (&data_[j] == s->GetSquare(i)) skip = true;
-      }
-      if (skip) continue;
-      bs.insert(s->GetSquare(i));
-    }
-  }
-
-  for (auto s : be) {
-    for (unsigned i = 0; i < Size(); i++) {
-      bool skip = false;
-      for (auto j : path) {
-        if (&data_[j] == s->GetSquare(i)) skip = true;
-      }
-      if (skip) continue;
-      if (bs.find(s->GetSquare(i)) != bs.end()) {
-        Square *to_prune = s->GetSquare(i);
-        data_copy_[static_cast<size_t>(to_prune - &data_[0])] -= number;
-      }
-    }
-  }
+  return modified;
 }
 
 } // namespace sudoku
