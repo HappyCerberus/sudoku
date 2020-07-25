@@ -7,6 +7,14 @@
 
 namespace sudoku {
 
+void Square::Serialize(std::ostream& s) const {
+    s << data_;
+}
+
+void Square::Deserialize(std::istream &s) {
+    s >> data_;
+}
+
 std::string Square::DebugString() const {
   std::stringstream s;
   s << "[";

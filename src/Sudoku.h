@@ -126,6 +126,9 @@ public:
     return true;
   }
 
+  std::string Serialize() const;
+  void Deserialize(const std::string& data);
+
   /*! Square bracket operator to allow for 2D access.
    *
    * @param index Row index to return.
@@ -206,6 +209,7 @@ private:
   unsigned size_;
   std::string debug_;
   const Sudoku* solution_;
+  SudokuTypes puzzle_type_;
 
   void MakeCopy() { data_copy_ = data_;}
   void SwapCopy() {

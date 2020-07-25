@@ -38,7 +38,7 @@ using Catch::Matchers::UnorderedEquals;
 
 void TestOverrideValue(Square &s, uint64_t value) { s.OverrideValue(value); }
 
-TEST_CASE("BlockChecker : recursive_set_find", "") {
+    TEST_CASE("BlockChecker : recursive_set_find", "") {
   std::vector<Square> data(9, Square(9u));
   std::vector<Square *> squares;
   for (unsigned i = 0; i < static_cast<unsigned>(data.size()); i++) {

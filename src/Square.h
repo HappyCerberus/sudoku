@@ -277,6 +277,9 @@ public:
    */
   std::string DebugString() const;
 
+  void Serialize(std::ostream& s) const;
+  void Deserialize(std::istream& s);
+
 private:
   constexpr void OverrideValue(uint64_t data) noexcept {
     data_ = data;

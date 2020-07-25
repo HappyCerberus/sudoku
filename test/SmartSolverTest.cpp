@@ -24,6 +24,28 @@ TEST_CASE("Solver : Test Solve", "x") {
   SolveStats stats;
   REQUIRE(SmartSolver::Solve(test3, stats));
 }
+
+TEST_CASE("Solver : Puzzle Solve Test", "x") {
+    std::string small = "0  2  0   0  0  9   0  5  0 \n"
+                        "0  0  4   0  7  0   2  0  0 \n"
+                        "0  5  0   4  0  6   0  0  0 \n"
+                        "\n"
+                        "1  0  6   0  0  7   0  0  0 \n"
+                        "0  0  8   0  9  0   1  0  0 \n"
+                        "0  0  0   3  0  0   4  0  7 \n"
+                        "\n"
+                        "0  0  0   9  0  2   0  6  0 \n"
+                        "0  0  5   0  3  0   9  0  0 \n"
+                        "0  6  0   7  0  0   0  2  0 ";
+    std::stringstream stream(small);
+    Sudoku test(9);
+    stream >> test;
+
+    SolveStats stats;
+    REQUIRE(SmartSolver::Solve(test, stats));
+    REQUIRE(!test.HasConflict());
+}
+
 /*
 TEST_CASE("Solver : Bad Solve", "[]") {
   std::string puzzle =

@@ -14,7 +14,7 @@ Sudoku::Sudoku(unsigned size, SudokuTypes type)
     : data_(size*size, sudoku::Square{size}),
       block_mapping_(size, std::vector<std::vector<BlockChecker *>>(
                                size, std::vector<BlockChecker *>())),
-      size_(size) {
+      size_(size), puzzle_type_(type) {
   SetupCheckers(size, type);
 }
 
@@ -586,6 +586,65 @@ bool Sudoku::PruneNumbersSeenFrom(const std::vector<unsigned>& path, unsigned
   }
 
   return modified;
+}
+
+std::string Sudoku::Serialize() const {
+    std::stringstream s;
+    // version:
+    s << "0:";
+    // num_rows:num_cols:num_possibilities:
+    s << Size() << ":" << Size() << ":" << Size() << ":";
+    for (unsigned i = 0; i < Size(); i++) {
+        for (unsigned j = 0; j < Size(); j++) {
+            data_[i*Size()+j].Serialize(s);
+            s << ":";
+        }
+    }
+    // puzzle type
+    s << static_cast<int>(puzzle_type_) << ":";
+    return s.str();
+}
+
+void Sudoku::Deserialize(const std::string &data) {
+    std::stringstream s;
+    s.str(data);
+    char delim = 0;
+    int version = 0;
+    s >> version >> delim;
+    if (version != 0)
+        throw std::out_of_range("Currently only version 0 of data format is supported.");
+    if (!s)
+        throw std::runtime_error("Unexpected data in deserialized puzzle.");
+    unsigned rows = 0, cols = 0, poss = 0;
+    s >> rows >> delim >> cols >> delim >> poss >> delim;
+    if (!(rows == cols && cols == poss))
+        throw std::out_of_range("Currently on perfectly square sudoku puzzles are supported.");
+    if (!s)
+        throw std::runtime_error("Unexpected data in deserialized puzzle.");
+    size_ = rows;
+    data_ = std::vector<sudoku::Square>(size_*size_, sudoku::Square{size_});
+    block_mapping_ = std::vector<std::vector<std::vector<BlockChecker *>>>(size_, std::vector<std::vector<BlockChecker *>>(size_, std::vector<BlockChecker *>()));
+    checks_.clear();
+    row_checks_.clear();
+    col_checks_.clear();
+
+    for (unsigned i = 0; i < Size(); i++) {
+        for (unsigned j = 0; j < Size(); j++) {
+            data_[i*Size()+j].Deserialize(s);
+            s >> delim;
+            if (!s)
+                throw std::runtime_error("Unexpected data in deserialized puzzle.");
+        }
+    }
+
+    unsigned type = 0;
+    s >> type;
+    if (type > static_cast<unsigned>(DIAGONAL))
+        throw std::out_of_range("Unexpected type of sudoku.");
+    if (!s)
+        throw std::runtime_error("Unexpected data in deserialized puzzle.");
+    puzzle_type_ = static_cast<SudokuTypes>(type);
+    SetupCheckers(size_, puzzle_type_);
 }
 
 } // namespace sudoku
