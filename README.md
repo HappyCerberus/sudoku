@@ -18,28 +18,30 @@ The UI for this solver lives in the [sudoku_ui repository](https://happycerberus
 
 The video & audio quality improves over time and I'm continually making improvements.
 
-* [2020/05/09](https://www.youtube.com/watch?v=5sWMJq4A7w8)
-* [2020/05/10](https://www.youtube.com/watch?v=V4AI9G5i_SE)
-* [2020/05/16](https://www.youtube.com/watch?v=DRZIKmg4SlI)
-* [2020/05/17](https://www.youtube.com/watch?v=TaL9mO_nx_k)
-* [2020/05/23](https://www.youtube.com/watch?v=bBplxuWt6Uw)
-* [2020/05/24](https://www.youtube.com/watch?v=TJvSay58Kts)
-* [2020/05/30](https://www.youtube.com/watch?v=2NGetdNAMMY)
-* [2020/05/31](https://www.youtube.com/watch?v=Z9soPicHYlQ)
-* [2020/06/06](https://www.youtube.com/watch?v=1BDzCkx2H3M)
-* [2020/06/07](https://www.youtube.com/watch?v=tTQywLiZ9sk)
-* [2020/06/13](https://www.youtube.com/watch?v=JLhMUNtEJoY)
-* [2020/06/14](https://www.youtube.com/watch?v=muoFClZMEsQ)
-* [2020/06/20](https://www.youtube.com/watch?v=D1WXQlXBE4c)
-* [2020/06/21](https://www.youtube.com/watch?v=naaq102wGX4)
-* [2020/06/27](https://www.youtube.com/watch?v=k1C8PTeFuDM)
-* [2020/06/28](https://www.youtube.com/watch?v=KUlmMBJ86o0)
-* [2020/07/04](https://www.youtube.com/watch?v=geyO9bl_UJ4)
-* [2020/07/05](https://www.youtube.com/watch?v=IP1qALIQAow)
-* [2020/07/11](https://www.youtube.com/watch?v=0jpjYkazQ9k)
-* [2020/07/12](https://www.youtube.com/watch?v=8KMKMgw0GAE)
-* [2020/07/18](https://www.youtube.com/watch?v=HRfkPYK9Ldg)
-* [2020/07/19](https://www.youtube.com/watch?v=WKybY8xVm6g)
+* [2020/05/09](https://www.youtube.com/watch?v=5sWMJq4A7w8) Basic backtracking solver (bad sound quality)
+* [2020/05/10](https://www.youtube.com/watch?v=V4AI9G5i_SE) Diagonal sudoku support
+* [2020/05/16](https://www.youtube.com/watch?v=DRZIKmg4SlI) Working on pruning support
+* [2020/05/17](https://www.youtube.com/watch?v=TaL9mO_nx_k) Backtracking with pruning working
+* [2020/05/23](https://www.youtube.com/watch?v=bBplxuWt6Uw) Trying to crack 16x16 Sudokus
+* [2020/05/24](https://www.youtube.com/watch?v=TJvSay58Kts) Non-backtracking solving: sets, block intersections, fish rules 
+* [2020/05/30](https://www.youtube.com/watch?v=2NGetdNAMMY) Integration with CI & code cleanup
+* [2020/05/31](https://www.youtube.com/watch?v=Z9soPicHYlQ) Code cleanup
+* [2020/06/06](https://www.youtube.com/watch?v=1BDzCkx2H3M) Integrating solver stats, fixing warnings
+* [2020/06/07](https://www.youtube.com/watch?v=tTQywLiZ9sk) Debugging & integrating a benchmark dataset
+* [2020/06/13](https://www.youtube.com/watch?v=JLhMUNtEJoY) Finned fish rules
+* [2020/06/14](https://www.youtube.com/watch?v=muoFClZMEsQ) Finned fish rules
+* [2020/06/20](https://www.youtube.com/watch?v=D1WXQlXBE4c) Looking at performance
+* [2020/06/21](https://www.youtube.com/watch?v=naaq102wGX4) Optimizing the solver
+* [2020/06/27](https://www.youtube.com/watch?v=k1C8PTeFuDM) Optimizing the solver
+* [2020/06/28](https://www.youtube.com/watch?v=KUlmMBJ86o0) Optimizing the solver
+* [2020/07/04](https://www.youtube.com/watch?v=geyO9bl_UJ4) Solving the last 1% of puzzles
+* [2020/07/05](https://www.youtube.com/watch?v=IP1qALIQAow) Solving the last 1% of puzzles (audio missing in first 30 minutes)
+* [2020/07/11](https://www.youtube.com/watch?v=0jpjYkazQ9k) Looking at the performance again
+* [2020/07/12](https://www.youtube.com/watch?v=8KMKMgw0GAE) UI: Fruitlessly trying to make Emscripten work
+* [2020/07/18](https://www.youtube.com/watch?v=HRfkPYK9Ldg) UI: First UI results with asm-dom
+* [2020/07/19](https://www.youtube.com/watch?v=WKybY8xVm6g) UI: Connecting the solver with the UI
+* [2020/07/25](https://www.youtube.com/watch?v=Q0PMst3mHsM) UI: Storing the puzzle data in the URL
+* [2020/07/26](https://www.youtube.com/watch?v=t9BHhHa8aHU) UI: Adding buttons & candidate notation
 
 ## Current Benchmark results
 
