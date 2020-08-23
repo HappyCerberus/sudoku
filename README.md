@@ -42,6 +42,15 @@ The video & audio quality improves over time and I'm continually making improvem
 * [2020/07/19](https://www.youtube.com/watch?v=WKybY8xVm6g) UI: Connecting the solver with the UI
 * [2020/07/25](https://www.youtube.com/watch?v=Q0PMst3mHsM) UI: Storing the puzzle data in the URL
 * [2020/07/26](https://www.youtube.com/watch?v=t9BHhHa8aHU) UI: Adding buttons & candidate notation
+* [2020/08/01](https://www.youtube.com/watch?v=wzThLGjnNc4) Initial attempts at Killer Sudoku
+* [2020/08/02](https://www.youtube.com/watch?v=VcP9sCdq2UA) Refactoring code for simplicity & C++20 Part 1
+* [2020/08/08](https://www.youtube.com/watch?v=7HCIzoYdcgk) Refactoring code for simplicity & C++20 Part 2
+* [2020/08/09](https://www.youtube.com/watch?v=sIlTAofJqI4) Refactoring code for simplicity & C++20 Part 3
+* [2020/08/15](https://www.youtube.com/watch?v=42z1t8BwFcQ) Refactoring code for simplicity & C++20 Part 4
+* [2020/08/16](https://www.youtube.com/watch?v=mmMSGK9da9o) Refactoring code for simplicity & C++20 Part 5
+* [2020/08/22](https://www.youtube.com/watch?v=UhhJV4TsJcw) Refactoring code for simplicity & C++20 Part 6
+* [2020/08/23](https://www.youtube.com/watch?v=qs7kNE5G6Ls) Refactoring code for simplicity & C++20 Part 7
+
 
 ## Current Benchmark results
 
