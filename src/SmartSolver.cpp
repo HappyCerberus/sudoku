@@ -1,12 +1,16 @@
-//
-// Created by Happy on 14/06/2020.
-//
+/* (c) 2020 RNDr. Simon Toth (happy.cerberus@gmail.com) */
 
 #include "SmartSolver.h"
+#include "core/SudokuAlgorithms.h"
 #include <iostream>
 
-bool SmartSolver::Solve(sudoku::Sudoku &sudoku, SolveStats &stats) {
-  while (!sudoku.IsSet()) {
+
+bool SmartSolver::SingleStep(sudoku::Sudoku &sudoku, SolveStats &stats) {
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
+    }
+
     auto changed_blocks = sudoku.ChangedBlocks();
     if (changed_blocks.size() == 0) {
       return false;
@@ -14,210 +18,317 @@ bool SmartSolver::Solve(sudoku::Sudoku &sudoku, SolveStats &stats) {
     sudoku.ResetChange();
 
     for (auto &block : changed_blocks) {
-      block->SolveHiddenGroups(1);
-      block->SolveNakedGroups(1);
+      SolveHiddenGroups(block->GetSquares(), 1);
+      SolveNakedGroups(block->GetSquares(), 1);
     }
 
     if (sudoku.HasChange()) {
       stats.groups[1]++;
-      continue;
+      return true;
     }
 
     for (auto &block : sudoku.Blocks()) {
-      block.SolveHiddenGroups(2);
-      block.SolveNakedGroups(2);
+      SolveHiddenGroups(block.GetSquares(), 2);
+      SolveNakedGroups(block.GetSquares(), 2);
+    }
+
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
     }
 
     if (sudoku.HasChange()) {
       stats.groups[2]++;
-      continue;
+      return true;
     }
 
     // Intersecting blocks rule
     for (auto &block : sudoku.Blocks()) {
       for (auto &rblock : sudoku.Blocks()) {
-        block.SolveIntersection(rblock);
+        SolveBlockIntersection(block, rblock);
       }
+    }
+
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
     }
 
     if (sudoku.HasChange()) {
       stats.block_intersections++;
-      continue;
+      return true;
     }
 
     for (auto &block : sudoku.Blocks()) {
-      block.SolveHiddenGroups(3);
-      block.SolveNakedGroups(3);
+      SolveHiddenGroups(block.GetSquares(), 3);
+      SolveNakedGroups(block.GetSquares(), 3);
+    }
+
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
     }
 
     if (sudoku.HasChange()) {
       stats.groups[3]++;
-      continue;
+      return true;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveFish(2u, j);
     }
 
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
+    }
+
     if (sudoku.HasChange()) {
       stats.fish[2]++;
-      continue;
+      return true;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveXChains(4u, j);
     }
 
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
+    }
+
     if (sudoku.HasChange()) {
       stats.xchains[4u]++;
-      continue;
+      return true;
     }
 
     for (auto &block : sudoku.Blocks()) {
-      block.SolveHiddenGroups(4);
-      block.SolveNakedGroups(4);
+      SolveHiddenGroups(block.GetSquares(), 4);
+      SolveNakedGroups(block.GetSquares(), 4);
+    }
+
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
     }
 
     if (sudoku.HasChange()) {
       stats.groups[4]++;
-      continue;
+      return true;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveFish(3u, j);
     }
 
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
+    }
+
     if (sudoku.HasChange()) {
       stats.fish[3]++;
-      continue;
+      return true;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveFinnedFish(2u, j);
     }
 
-    if (sudoku.HasChange()) {
-      stats.finned_fish[2]++;
-      continue;
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
     }
 
     if (sudoku.HasChange()) {
-      stats.fish[6]++;
-      continue;
+      stats.finned_fish[2]++;
+      return true;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveXChains(6u, j);
     }
 
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
+    }
+
     if (sudoku.HasChange()) {
       stats.xchains[6]++;
-      continue;
+      return true;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveFinnedFish(3u, j);
     }
 
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
+    }
+
     if (sudoku.HasChange()) {
       stats.finned_fish[3]++;
-      continue;
+      return true;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveFish(4u, j);
     }
 
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
+    }
+
     if (sudoku.HasChange()) {
       stats.fish[4]++;
-      continue;
+      return true;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveFish(5u, j);
     }
 
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
+    }
+
     if (sudoku.HasChange()) {
       stats.fish[5]++;
-      continue;
+      return true;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveFish(6u, j);
     }
 
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
+    }
+   
+    if (sudoku.HasChange()) {
+      stats.fish[6]++;
+      return true;
+    }
+
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveFish(7u, j);
     }
 
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
+    }
+
     if (sudoku.HasChange()) {
       stats.fish[7]++;
-      continue;
+      return true;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveXChains(8u, j);
     }
 
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
+    }
+
     if (sudoku.HasChange()) {
       stats.xchains[8]++;
-      continue;
+      return true;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveFinnedFish(4u, j);
     }
 
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
+    }
+
     if (sudoku.HasChange()) {
       stats.finned_fish[4]++;
-      continue;
+      return true;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveXChains(10u, j);
     }
 
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
+    }
+
     if (sudoku.HasChange()) {
       stats.xchains[10]++;
-      continue;
+      return true;
     }
 
     sudoku.SolveXYChains();
 
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
+    }
+
     if (sudoku.HasChange()) {
       stats.xychains++;
-      continue;
+      return true;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveFinnedFish(5u, j);
     }
 
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
+    }
+
     if (sudoku.HasChange()) {
       stats.finned_fish[5]++;
-      continue;
+      return true;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveFinnedFish(6u, j);
     }
 
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
+    }
+
     if (sudoku.HasChange()) {
       stats.finned_fish[6]++;
-      continue;
+      return true;
     }
 
     for (unsigned j = 1; j <= sudoku.Size(); j++) {
       sudoku.SolveFinnedFish(7u, j);
     }
 
-    if (sudoku.HasChange()) {
-      stats.finned_fish[7]++;
-      continue;
+    if (sudoku.HasSolution()) {
+      if (!sudoku.CheckAgainstSolution())
+        return false;
     }
 
-    break;
-  }
+    if (sudoku.HasChange()) {
+      stats.finned_fish[7]++;
+      return true;
+    }
 
+    return false;
+}
+
+bool SmartSolver::Solve(sudoku::Sudoku &sudoku, SolveStats &stats) {
+  while (!sudoku.IsSet() && SingleStep(sudoku, stats));
   return sudoku.IsSet();
 }

@@ -7,7 +7,6 @@
  */
 
 #include "SolveStats.h"
-#include "Square.h"
 #include "Sudoku.h"
 
 #include "Progressbar.h"
@@ -96,7 +95,7 @@ void SolveOneSudoku(std::ifstream &f, int64_t line_number,
     bool correct = true;
     for (unsigned x = 0; x < s.Size(); x++) {
       for (unsigned y = 0; y < s.Size(); y++) {
-        if (static_cast<unsigned>(output[pos] - '0') != s[x][y].Value())
+        if (static_cast<unsigned>(output[pos] - '0') != s[x][y].SingletonValue())
           correct = false;
         pos++;
       }

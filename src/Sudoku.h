@@ -2,8 +2,8 @@
 #ifndef SUDOKU_SUDOKU_H
 #define SUDOKU_SUDOKU_H
 
-#include "BlockChecker.h"
-#include "Square.h"
+#include "core/BitSet.h"
+#include "core/UniqueBlock.h"
 #include <cstdint>
 #include <cstring>
 #include <functional>
@@ -11,6 +11,7 @@
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
+#include <string>
 #include <vector>
 
 enum SudokuTypes { BASIC = 1, DIAGONAL = 2 };
@@ -21,18 +22,17 @@ class Sudoku;
 std::ostream &operator<<(std::ostream &s, const Sudoku &puzzle);
 std::istream &operator>>(std::istream &s, Sudoku &puzzle);
 
-
 class SudokuRow {
 public:
   SudokuRow() = delete;
   SudokuRow(const SudokuRow &) = default;
   SudokuRow(SudokuRow &&) = default;
 
-  Square &operator[](unsigned index) {
+  BitSet &operator[](unsigned index) {
     assert(index < len_);
     return data_[index];
   }
-  const Square &operator[](unsigned index) const {
+  const BitSet &operator[](unsigned index) const {
     assert(index < len_);
     return data_[index];
   }
@@ -40,9 +40,9 @@ public:
   unsigned Size() const { return len_; }
 
 private:
-  SudokuRow(Square *data, unsigned len) : data_(data), len_(len) {}
+  SudokuRow(BitSet *data, unsigned len) : data_(data), len_(len) {}
 
-  Square *data_;
+  BitSet *data_;
   unsigned len_;
   friend class Sudoku;
   friend class ConstSudokuRow;
@@ -56,7 +56,7 @@ public:
   ConstSudokuRow(const SudokuRow &r) : data_(r.data_), len_(r.len_) {}
   ConstSudokuRow(SudokuRow &&r) : data_(r.data_), len_(r.len_) {}
 
-  const Square &operator[](unsigned index) const {
+  const BitSet &operator[](unsigned index) const {
     assert(index < len_);
     return data_[index];
   }
@@ -64,14 +64,15 @@ public:
   unsigned Size() const { return len_; }
 
 private:
-  ConstSudokuRow(const Square *data, unsigned len) : data_(data), len_(len) {}
+  ConstSudokuRow(const BitSet *data, unsigned len) : data_(data), len_(len) {}
 
-  const Square *data_;
+  const BitSet *data_;
   unsigned len_;
   friend class Sudoku;
 };
 
 struct ChainsGraph {
+  // Absolute position of the square inside of the puzzle.
   std::vector<unsigned> nodes;
   std::unordered_multimap<unsigned, unsigned> weak_links;
   std::unordered_multimap<unsigned, unsigned> strong_links;
@@ -113,12 +114,20 @@ public:
     solution_ = solution;
   }
 
+  bool HasSolution() const {
+    return solution_ != nullptr;
+  }
+
   bool CheckAgainstSolution() {
     if (solution_ == nullptr) return true;
 
     for (unsigned i = 0; i < Size(); i++) {
       for (unsigned j = 0; j < Size(); j++) {
-        if (!data_[i*Size() + j].IsPossible(solution_->data_[i*Size() + j].Value()))
+        if (data_[i*Size()+j].HasSingletonValue()) {
+          if (data_[i*Size()+j].SingletonValue() != solution_->data_[i*Size() + j].SingletonValue())
+            return false;
+        }
+        if (!data_[i*Size() + j].IsBitSet(solution_->data_[i*Size() + j].SingletonValue()))
           return false;
       }
     }
@@ -158,26 +167,24 @@ public:
    *
    * @return Set of blocks.
    */
-  std::unordered_set<BlockChecker *> ChangedBlocks() const;
+  std::unordered_set<UniqueBlock *> ChangedBlocks() const;
 
   //! Return the size of the Sudoku.
   unsigned Size() const { return size_; }
 
   //! Return a const reference to the list of blocks.
-  const std::vector<BlockChecker> &Blocks() const { return checks_; }
+  const std::vector<UniqueBlock> &Blocks() const { return checks_; }
   //! Return a reference to the list of blocks.
-  std::vector<BlockChecker> &Blocks() { return checks_; }
+  std::vector<UniqueBlock> &Blocks() { return checks_; }
   //! Return a const reference to the row blocks.
-  const std::vector<BlockChecker *> &GetRowBlocks() const {
+  const std::vector<UniqueBlock *> &GetRowBlocks() const {
     return row_checks_;
   }
   //! Return a const reference to the column blocks.
-  const std::vector<BlockChecker *> &GetColBlocks() const {
+  const std::vector<UniqueBlock *> &GetColBlocks() const {
     return col_checks_;
   }
 
-  //! Return first square that is not set.
-  std::pair<unsigned, unsigned> FirstUnset() const;
   //! Return whether all squares are set.
   bool IsSet() const;
   //! Return whether there is any conflict in the puzzle.
@@ -185,6 +192,7 @@ public:
 
   //! Debug print the puzzle (output the current possibilities for each square).
   void DebugPrint(std::ostream &s);
+  std::string DebugString();
 
   //! Solve fish for a given size and a number.
   void SolveFish(unsigned size, unsigned number);
@@ -198,16 +206,15 @@ public:
   //! Solve XY chains for a given number.
   void SolveXYChains();
 
-
 private:
-  std::vector<BlockChecker> checks_;
-  std::vector<BlockChecker *> row_checks_;
-  std::vector<BlockChecker *> col_checks_;
-  std::vector<sudoku::Square> data_;
-  std::vector<sudoku::Square> data_copy_;
-  std::vector<std::vector<std::vector<BlockChecker *>>> block_mapping_;
+  std::vector<UniqueBlock> checks_;
+  std::vector<UniqueBlock *> row_checks_;
+  std::vector<UniqueBlock *> col_checks_;
+  std::vector<BitSet> data_;
+  std::vector<BitSet> data_copy_;
+  std::vector<std::vector<std::vector<UniqueBlock *>>> block_mapping_;
+
   unsigned size_;
-  std::string debug_;
   const Sudoku* solution_;
   SudokuTypes puzzle_type_;
 
@@ -218,15 +225,10 @@ private:
     }
   }
 
-  void SetupCheckers(unsigned size = 9, SudokuTypes type = BASIC);
+  void SetupCheckers(unsigned size, SudokuTypes type);
 
   unsigned NumberOfSharedBlocks(std::pair<unsigned, unsigned> l,
                             std::pair<unsigned, unsigned> r) const;
-
-  std::pair<unsigned,unsigned> GetFin(const std::vector<BlockChecker *>& blocks,
-                  std::vector<unsigned>::const_iterator begin,
-                                      std::vector<unsigned>::const_iterator end,
-                  unsigned number) const;
 
   bool dfs_traverse(const std::vector<ChainsGraph>& g, const std::function<bool
       (const std::vector<unsigned>&)> &cb, std::vector<unsigned> &path,
@@ -245,7 +247,7 @@ private:
                     const std::function<void(const std::vector<unsigned>&)> &cb,
                     std::vector<unsigned> &path, bool weak);
 
-  friend std::vector<std::vector<std::vector<BlockChecker *>>> &
+  friend std::vector<std::vector<std::vector<UniqueBlock *>>> &
   TestGetMappings(Sudoku &s);
 
   friend std::istream &operator>>(std::istream &s, Sudoku &puzzle);

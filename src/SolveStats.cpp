@@ -1,6 +1,4 @@
-//
-// Created by Happy on 13/06/2020.
-//
+/* (c) 2020 RNDr. Simon Toth (happy.cerberus@gmail.com) */
 
 #include "SolveStats.h"
 #include <chrono>

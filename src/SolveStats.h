@@ -1,12 +1,11 @@
-//
-// Created by Happy on 13/06/2020.
-//
+/* (c) 2020 RNDr. Simon Toth (happy.cerberus@gmail.com) */
 
 #ifndef SUDOKU_SOLVESTATS_H
 #define SUDOKU_SOLVESTATS_H
 
 #include <unordered_map>
 #include <vector>
+#include <iosfwd>
 
 struct SolveStats {
   std::unordered_map<unsigned, unsigned> groups;

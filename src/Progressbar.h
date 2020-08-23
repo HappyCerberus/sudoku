@@ -1,6 +1,4 @@
-//
-// Created by Happy on 05/07/2020.
-//
+/* (c) 2020 RNDr. Simon Toth (happy.cerberus@gmail.com) */
 
 #ifndef SUDOKU_PROGRESSBAR_H
 #define SUDOKU_PROGRESSBAR_H

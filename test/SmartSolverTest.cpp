@@ -5,6 +5,7 @@
 
 namespace sudoku {
 
+
 TEST_CASE("Solver : Test Solve", "x") {
   std::string small = "4  0  0   0  0  8   0  0  3 \n"
                       "0  0  5   2  0  0   0  1  0 \n"
@@ -22,7 +23,7 @@ TEST_CASE("Solver : Test Solve", "x") {
   stream >> test3;
 
   SolveStats stats;
-  REQUIRE(SmartSolver::Solve(test3, stats));
+  CHECK(SmartSolver::Solve(test3, stats));
 }
 
 TEST_CASE("Solver : Puzzle Solve Test", "x") {
@@ -40,18 +41,25 @@ TEST_CASE("Solver : Puzzle Solve Test", "x") {
     std::stringstream stream(small);
     Sudoku test(9);
     stream >> test;
+    std::string solution = "327 189 654 684 573 219 951 426 873 136 847 592 748 295 136 592 361 487 413 952 768 275 638 941 869 714 325";
+    stream.str(solution);
+    Sudoku solved(9u);
+    stream >> solved;
+
+    test.SetSolution(&solved);
 
     SolveStats stats;
-    REQUIRE(SmartSolver::Solve(test, stats));
+    while (!test.IsSet() && SmartSolver::SingleStep(test,stats));
+    WARN(test.DebugString());
     REQUIRE(!test.HasConflict());
+    REQUIRE(test.IsSet());
 }
 
-/*
+
 TEST_CASE("Solver : Bad Solve", "[]") {
   std::string puzzle =
-      "030085000625319700000002005000074100000250000700003002106030009008000010490500860\n";
-  std::string expected =
-      "934785621625319784817642395562974138341258976789163452156837249278496513493521867\n";
+      "030 085 000 625 319 700 000 002 005 000 074 100 000 250 000 700 003 002 106 030 009 008 000 010 490 500 860\n";
+  std::string expected = "934785621625319784817642395562974138341258976789163452156837249278496513493521867\n";
   std::stringstream stream(puzzle);
   Sudoku test(9);
   stream >> test;
@@ -63,21 +71,14 @@ TEST_CASE("Solver : Bad Solve", "[]") {
   std::stringstream out;
 
   SolveStats stats;
-  auto res = SmartSolver::Solve(test, stats);
-  out.str("");
-  test.DebugPrint(out);
-  INFO(out.str());
-  CHECK(res);
+  while (!test.IsSet() && !test.HasConflict() && SmartSolver::SingleStep(test,stats));
+  REQUIRE(!test.HasConflict());
+  /*
   for (unsigned i = 0; i < test.Size(); i++) {
     for (unsigned j = 0; j < test.Size(); j++) {
-      out.str("");
-      test.DebugPrint(out);
-      INFO("Position " << i << " " << j << " " << i*test.Size()+j);
-      INFO(out.str());
-
-      CHECK(test[i][j].Value() == expected[i*test.Size()+j]-'0');
+      CHECK(test[i][j].SingletonValue() == expected[i*test.Size()+j]-'0');
     }
-  }
-}*/
+  }*/
+}
 
 } // namespace sudoku

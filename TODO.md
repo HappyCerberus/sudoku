@@ -1,5 +1,11 @@
 # Notes for future streams
+- re-run all performance tests with a proper callgraph
+- re-introduce killer sudoku
 
-- pruning step in each solving technique needs to be moved to the end, otherwise the pruning is breaking the
- expectations
-- performance evaluation on proper Linux where perf works
+
+## Killer sudoku
+
+- generate map of sums
+  - Size of puzzle -> Size of Killer block -> Sum of Killer block -> vector of vector of number
+- plug in the killer sudoku solving techniques into the solver
+- solving technique that limits the possible numbers and possible sets of numbers across the squares inside of the Killer cage
