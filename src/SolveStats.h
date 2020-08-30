@@ -14,8 +14,9 @@ struct SolveStats {
   std::unordered_map<unsigned, unsigned> finned_fish;
   std::unordered_map<unsigned, unsigned> xchains;
   unsigned xychains;
+  unsigned killer_sums;
   SolveStats() : groups(), block_intersections(0), fish(), finned_fish(),
-                 xchains(), xychains(0) {}
+                 xchains(), xychains(0), killer_sums(0) {}
   SolveStats &operator+=(const SolveStats &stats);
 };
 

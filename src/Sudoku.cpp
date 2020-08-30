@@ -522,6 +522,100 @@ bool Sudoku::PruneNumbersSeenFrom(const std::vector<unsigned>& path, unsigned
   return modified;
 }
 
+void Sudoku::PruneKillerBlockSums() {
+    for (auto& killer : killers_) {
+        killer.PruneSumSets();
+        killer.PruneSumSetsBySquare();
+    }
+}
+
+void Sudoku::PruneSquaresFromKillerBlocks() {
+    for (auto& killer : killers_) {
+        BitSet u = killer.UnionSumSet();
+        for (auto& square : killer.GetSquares()) {
+            (*square) &= u;
+        }
+    }
+}
+
+void Sudoku::PreBuildKillerMapping() {
+    for (unsigned killerId = 0; killerId < killers_.size(); killerId++) {
+        auto &killer = killers_[killerId];
+        std::vector<UniqueBlock *> intersection = GetBlockMapping(killer.GetSquares()[0]);
+        for (unsigned i = 1; i < killer.GetSquares().size(); i++) {
+            std::vector<UniqueBlock *> current = GetBlockMapping(killer.GetSquares()[i]);
+            std::vector<UniqueBlock *> new_inter;
+            std::set_intersection(intersection.begin(), intersection.end(),
+                                  current.begin(), current.end(),
+                                  std::back_inserter(new_inter));
+            intersection.swap(new_inter);
+        }
+
+        for (auto &block : intersection) {
+            unsigned offset = static_cast<unsigned>(block - &checks_[0]);
+            contained_killer_blocks_.insert(std::make_pair(offset, killerId));
+        }
+    }
+}
+
+void Sudoku::ProcessContainedKillerBlocks(unsigned blockId, unsigned &num_squares, unsigned &killer_sum, BitSet &found) {
+    num_squares = 0;
+    killer_sum = 0;
+    found = BitSet::SudokuSquare(checks_[blockId].Size());
+    auto range = contained_killer_blocks_.equal_range(blockId);
+    for (auto it = range.first; it != range.second; it++) {
+        num_squares += killers_[it->second].Size();
+        killer_sum += killers_[it->second].Sum();
+        // go over all the squares within the killer block
+        for (auto &square : killers_[it->second].GetSquares()) {
+            for (unsigned i = 0; i < checks_[blockId].Size(); i++) {
+                if (square == checks_[blockId].GetSquares()[i]) {
+                    found -= (i+1);
+                }
+            }
+        }
+    }
+}
+
+void Sudoku::AddKillerSingles() {
+    for (unsigned blockId = 0; blockId < checks_.size(); blockId++) {
+        unsigned num_squares = 0;
+        unsigned killer_sum = 0;
+        BitSet found = BitSet::SudokuSquare(checks_[blockId].Size());
+        ProcessContainedKillerBlocks(blockId, num_squares, killer_sum, found);
+        if (num_squares == checks_[blockId].Size() - 1) {
+            assert(found.HasSingletonValue());
+            auto square = checks_[blockId].GetSquares()[found.SingletonValue()-1];
+            (*square) = BitSet::SingleBit(checks_[blockId].Max(), block_sums.at(checks_[blockId].Size()) - killer_sum);
+        }
+    }
+}
+
+void Sudoku::AddKillerRemainders(unsigned size) {
+    for (unsigned blockId = 0; blockId < checks_.size(); blockId++) {
+        unsigned num_squares = 0;
+        unsigned killer_sum = 0;
+        BitSet found = BitSet::SudokuSquare(checks_[blockId].Size());
+        ProcessContainedKillerBlocks(blockId, num_squares, killer_sum, found);
+        if (num_squares == checks_[blockId].Size() - size) {
+            std::vector<BitSet*> squares;
+            for (auto bit : BitSetBits(&found)) {
+                squares.push_back(checks_[blockId].GetSquares()[bit-1]);
+            }
+            killers_.emplace_back(std::move(squares), checks_[blockId].Max(), block_sums.at(checks_[blockId].Size()) - killer_sum);
+        }
+    }
+}
+
+void Sudoku::SerializeKillerBlock(const KillerBlock& k, std::ostream& s) const {
+    s << 0 << ":"; // killer block tag
+    s << k.Size() << ":" << k.Sum() << ":";
+    for (auto& square : k.GetSquares()) {
+        unsigned offset = static_cast<unsigned>(square-&data_[0]);
+        s << offset << ":";
+    }
+}
+
 std::string Sudoku::Serialize() const {
     std::stringstream s;
     // version:
@@ -536,7 +630,28 @@ std::string Sudoku::Serialize() const {
     }
     // puzzle type
     s << static_cast<int>(puzzle_type_) << ":";
+    for (auto &killer : killers_) {
+        SerializeKillerBlock(killer, s);
+    }
     return s.str();
+}
+
+void Sudoku::DeserializeKillerBlock(std::istream& s) {
+    char delim = 0;
+    unsigned number_of_squares, sum;
+    s >> number_of_squares >> delim >> sum >> delim;
+    if (!s)
+        throw std::runtime_error("Unexpected data in deserialized killer block.");
+    std::vector<BitSet*> squares;
+    for (unsigned i = 0; i < number_of_squares; i++) {
+        unsigned offset;
+        s >> offset >> delim;
+        if (!s)
+            throw std::runtime_error("Unexpected offset data in deserialized killer block.");
+        squares.push_back(&data_[offset]);
+    }
+
+    killers_.emplace_back(std::move(squares), Max(), sum);
 }
 
 void Sudoku::Deserialize(const std::string &data) {
@@ -572,13 +687,22 @@ void Sudoku::Deserialize(const std::string &data) {
     }
 
     unsigned type = 0;
-    s >> type;
-    if (type > static_cast<unsigned>(DIAGONAL))
-        throw std::out_of_range("Unexpected type of sudoku.");
+    s >> type >> delim;
     if (!s)
         throw std::runtime_error("Unexpected data in deserialized puzzle.");
+    if (type > static_cast<unsigned>(DIAGONAL))
+        throw std::out_of_range("Unexpected type of sudoku.");
     puzzle_type_ = static_cast<SudokuTypes>(type);
     SetupCheckers(size_, puzzle_type_);
+
+    // Read additional blocks.
+    unsigned block_type = 0;
+    while (s >> block_type >> delim) {
+        // Killer block
+        if (block_type == 0) {
+            DeserializeKillerBlock(s);
+        }
+    }
 }
 
 } // namespace sudoku

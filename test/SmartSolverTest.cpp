@@ -5,6 +5,13 @@
 
 namespace sudoku {
 
+void TestInjectKillerBlock(Sudoku &s, unsigned sum, const std::vector<unsigned>& offsets) {
+    std::vector<BitSet*> squares;
+    for (unsigned o : offsets) {
+        squares.push_back(&s.data_[o]);
+    }
+    s.killers_.emplace_back(squares, s.Max(), sum);
+}
 
 TEST_CASE("Solver : Test Solve", "x") {
   std::string small = "4  0  0   0  0  8   0  0  3 \n"
@@ -50,9 +57,58 @@ TEST_CASE("Solver : Puzzle Solve Test", "x") {
 
     SolveStats stats;
     while (!test.IsSet() && SmartSolver::SingleStep(test,stats));
-    WARN(test.DebugString());
+    //WARN(test.DebugString());
     REQUIRE(!test.HasConflict());
     REQUIRE(test.IsSet());
+}
+
+TEST_CASE("Solver : Killer Sudoku","[]") {
+    Sudoku test(9);
+    TestInjectKillerBlock(test, 19, {0, 1, 2});
+    TestInjectKillerBlock(test, 20, {3, 4, 5});
+    TestInjectKillerBlock(test, 11, {6, 7, 16});
+    TestInjectKillerBlock(test, 7, {8, 17});
+    TestInjectKillerBlock(test, 16, {9, 10, 18, 19});
+    TestInjectKillerBlock(test, 15, {11, 12});
+    TestInjectKillerBlock(test, 10, {13, 22});
+    TestInjectKillerBlock(test, 14, {14, 15, 23});
+    TestInjectKillerBlock(test, 6, {20, 21, 30});
+    TestInjectKillerBlock(test, 13, {24, 33});
+    TestInjectKillerBlock(test, 15, {25, 26});
+    TestInjectKillerBlock(test, 17, {27, 28, 36, 45});
+    TestInjectKillerBlock(test, 11, {29, 38});
+    TestInjectKillerBlock(test, 11, {31, 32});
+    TestInjectKillerBlock(test, 10, {34, 43});
+    TestInjectKillerBlock(test, 14, {35, 44, 52, 53});
+    TestInjectKillerBlock(test, 15, {37, 46});
+    TestInjectKillerBlock(test, 14, {39, 40, 41});
+    TestInjectKillerBlock(test, 12, {42, 51});
+    TestInjectKillerBlock(test, 9, {47, 56});
+    TestInjectKillerBlock(test, 15, {48, 49});
+    TestInjectKillerBlock(test, 6, {50, 59, 60});
+    TestInjectKillerBlock(test, 11, {54, 55});
+    TestInjectKillerBlock(test, 18, {57, 65, 66});
+    TestInjectKillerBlock(test, 7, {58, 67});
+    TestInjectKillerBlock(test, 24, {61, 62, 70, 71});
+    TestInjectKillerBlock(test, 10, {63, 72});
+    TestInjectKillerBlock(test, 11, {64, 73, 74});
+    TestInjectKillerBlock(test, 6, {68, 69});
+    TestInjectKillerBlock(test, 20, {75, 76, 77});
+    TestInjectKillerBlock(test, 18, {78, 79, 80});
+
+    test.PreBuildKillerMapping();
+    test.PruneSquaresFromKillerBlocks();
+
+    test.AddKillerSingles();
+    test.AddKillerRemainders(2);
+    test.AddKillerRemainders(3);
+    test.AddKillerRemainders(4);
+
+    SolveStats stats;
+    while (!test.IsSet() && !test.HasConflict() && SmartSolver::SingleStep(test,stats));
+    REQUIRE(!test.HasConflict());
+    WARN(test.DebugString());
+    CHECK(test.IsSet());
 }
 
 

@@ -42,6 +42,20 @@ bool SmartSolver::SingleStep(sudoku::Sudoku &sudoku, SolveStats &stats) {
       return true;
     }
 
+    // Limit squares to only possible sums of killer blocks.
+    sudoku.PruneKillerBlockSums();
+    sudoku.PruneSquaresFromKillerBlocks();
+
+    if (sudoku.HasSolution()) {
+        if (!sudoku.CheckAgainstSolution())
+            return false;
+    }
+
+    if (sudoku.HasChange()) {
+        stats.killer_sums++;
+        return true;
+    }
+
     // Intersecting blocks rule
     for (auto &block : sudoku.Blocks()) {
       for (auto &rblock : sudoku.Blocks()) {

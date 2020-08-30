@@ -1,6 +1,7 @@
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 add_subdirectory(core)
+add_subdirectory(killer)
 
 add_library(sudoku_lib Sudoku.cpp Sudoku.h SolveStats.cpp
         SolveStats.h SmartSolver.cpp SmartSolver.h Progressbar.cpp Progressbar.h)

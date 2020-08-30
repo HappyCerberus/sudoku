@@ -14,6 +14,14 @@ TestGetMappings(Sudoku &s) {
   return s.block_mapping_;
 }
 
+void TestInjectKillerBlock(Sudoku &s, unsigned sum, const std::vector<unsigned>& offsets) {
+    std::vector<BitSet*> squares;
+    for (unsigned o : offsets) {
+        squares.push_back(&s.data_[o]);
+    }
+    s.killers_.emplace_back(squares, s.Max(), sum);
+}
+
 
 void ClearSudoku(Sudoku &s) {
   for (unsigned i = 0; i < s.Size(); i++) {
@@ -527,6 +535,67 @@ TEST_CASE("Sudoku : Serialize and Deserialize", "x") {
         }
     }
     REQUIRE(test.Serialize() == test2.Serialize());
+
+    SolveStats s;
+    SmartSolver::Solve(test,s);
+    SmartSolver::Solve(test2,s);
+    for (unsigned i = 0; i < 9; i++) {
+        for (unsigned j = 0; j < 9; j++) {
+            REQUIRE(test[i][j] == test2[i][j]);
+        }
+    }
+    REQUIRE(test.Serialize() == test2.Serialize());
+    //REQUIRE(test.Serialize() == "0:9:9:9:8:256:2:16:1:128:64:32:4:128:4:16:2:32:64:8:1:256:64:32:1:4:8:256:128:16:2:256:8:64:128:2:16:1:4:32:2:128:32:256:4:1:16:8:64:1:16:4:32:64:8:256:2:128:16:2:256:8:128:32:4:64:1:4:64:8:1:256:2:32:128:16:32:1:128:64:16:4:2:256:8:1:");
+}
+
+TEST_CASE("Sudoku : Serialize and Deserialize : Killer", "[killer]") {
+    std::string small = "4  0  0   0  0  8   0  0  3 \n"
+                        "0  0  5   2  0  0   0  1  0 \n"
+                        "0  6  0   0  0  9   0  0  0 \n"
+                        "\n"
+                        "0  0  0   0  0  0   0  3  0 \n"
+                        "0  0  6   9  0  1   0  0  0 \n"
+                        "0  0  0   6  0  4   9  2  0 \n"
+                        "\n"
+                        "0  2  9   0  0  0   3  0  0 \n"
+                        "0  0  4   0  0  2   0  8  5 \n"
+                        "0  0  0   7  0  3   0  0  0 ";
+    std::stringstream stream(small);
+    Sudoku test(9);
+    stream >> test;
+
+    TestInjectKillerBlock(test, 15, {1, 2, 11});
+    TestInjectKillerBlock(test, 9, {6,7});
+
+    std::string data = test.Serialize();
+    REQUIRE(data == "0:9:9:9:8:511:511:511:511:128:511:511:4:511:511:16:2:511:511:511:1:511:511:32:511:511:511:256:511:511:511:511:511:511:511:511:511:511:4:511:511:511:32:256:511:1:511:511:511:511:511:511:32:511:8:256:2:511:511:2:256:511:511:511:4:511:511:511:511:8:511:511:2:511:128:16:511:511:511:64:511:4:511:511:511:1:0:3:15:1:2:11:0:2:9:6:7:");
+
+    Sudoku test2(9);
+    try {
+        test2.Deserialize(data);
+    } catch(std::exception& e) {
+        INFO(e.what());
+        CHECK(false);
+    }
+
+    // check that the killer blocks match
+    for (unsigned i = 0; i < 9; i++) {
+        for (unsigned j = 0; j < 9; j++) {
+            REQUIRE(test[i][j] == test2[i][j]);
+        }
+    }
+    REQUIRE(test.Serialize() == test2.Serialize());
+
+    test.PreBuildKillerMapping();
+
+    auto &mapping = TestGetContainedKillerBlocks(test);
+    CHECK(mapping.size() == 3);
+    CHECK(mapping.count(0) == 1);
+    CHECK(mapping.count(18) == 1);
+    CHECK(mapping.count(20) == 1);
+    CHECK((*mapping.equal_range(0).first).second == 1);
+    CHECK((*mapping.equal_range(18).first).second == 0);
+    CHECK((*mapping.equal_range(20).first).second == 1);
 
     SolveStats s;
     SmartSolver::Solve(test,s);

@@ -25,6 +25,10 @@ add_executable(sudoku_algorithms_tests SudokuAlgorithmsTest.cpp)
 target_link_libraries(sudoku_algorithms_tests PRIVATE core sudoku_algorithms project_warnings project_options
         catch_main)
 
+add_executable(killer_tests KillerTest.cpp)
+target_link_libraries(killer_tests PRIVATE core killer project_warnings project_options
+        catch_main)
+
 # automatically discover tests that are defined in catch based test files you
 # can modify the unittests. TEST_PREFIX to whatever you want, or use different
 # for different binaries
@@ -54,6 +58,18 @@ catch_discover_tests(
 # for different binaries
 catch_discover_tests(
         solver_tests
+        TEST_PREFIX
+        "unittests."
+        EXTRA_ARGS
+        -s
+        --reporter=xml
+        --out=tests.xml)
+
+# automatically discover tests that are defined in catch based test files you
+# can modify the unittests. TEST_PREFIX to whatever you want, or use different
+# for different binaries
+catch_discover_tests(
+        killer_tests
         TEST_PREFIX
         "unittests."
         EXTRA_ARGS

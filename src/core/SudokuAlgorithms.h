@@ -11,6 +11,7 @@
 
 namespace sudoku {
 
+// Built for number of squares == max
 inline BitSet Union(const std::vector<BitSet*> &squares, BitSet selector) {
     BitSet result = BitSet::Empty(static_cast<unsigned>(squares.size()));
     for (auto iter : BitSetBits(&selector)) {

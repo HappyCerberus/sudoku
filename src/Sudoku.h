@@ -13,6 +13,7 @@
 #include <unordered_set>
 #include <string>
 #include <vector>
+#include "killer/KillerBlock.h"
 
 enum SudokuTypes { BASIC = 1, DIAGONAL = 2 };
 
@@ -172,6 +173,9 @@ public:
   //! Return the size of the Sudoku.
   unsigned Size() const { return size_; }
 
+  //! Return the maximum number used in the Sudoku.
+  unsigned Max() const { return size_; }
+
   //! Return a const reference to the list of blocks.
   const std::vector<UniqueBlock> &Blocks() const { return checks_; }
   //! Return a reference to the list of blocks.
@@ -206,6 +210,18 @@ public:
   //! Solve XY chains for a given number.
   void SolveXYChains();
 
+  //! Remove impossible sums from killer blocks, based on the square contents.
+  void PruneKillerBlockSums();
+  //! Remove impossible number from squares inside of killer blocks.
+  void PruneSquaresFromKillerBlocks();
+
+  //! Pre-compute the mapping of killer blocks into standard sudoku blocks (rows, columns, squares).
+  void PreBuildKillerMapping();
+  //! For single remainder squares, just set them to a specific number.
+  void AddKillerSingles();
+  //! For multi-square remainders, create a new killer block.
+  void AddKillerRemainders(unsigned size);
+
 private:
   std::vector<UniqueBlock> checks_;
   std::vector<UniqueBlock *> row_checks_;
@@ -213,6 +229,8 @@ private:
   std::vector<BitSet> data_;
   std::vector<BitSet> data_copy_;
   std::vector<std::vector<std::vector<UniqueBlock *>>> block_mapping_;
+  std::vector<KillerBlock> killers_;
+  std::unordered_multimap<unsigned, unsigned> contained_killer_blocks_;
 
   unsigned size_;
   const Sudoku* solution_;
@@ -225,10 +243,20 @@ private:
     }
   }
 
+  void DeserializeKillerBlock(std::istream& s);
+  void SerializeKillerBlock(const KillerBlock& k, std::ostream& s) const;
+
   void SetupCheckers(unsigned size, SudokuTypes type);
+
+  std::vector<UniqueBlock *> GetBlockMapping(BitSet* square) const {
+      unsigned off = static_cast<unsigned>(square - &data_[0]);
+      return block_mapping_[off/Size()][off%Size()];
+  }
 
   unsigned NumberOfSharedBlocks(std::pair<unsigned, unsigned> l,
                             std::pair<unsigned, unsigned> r) const;
+
+  void ProcessContainedKillerBlocks(unsigned blockId, unsigned &num_squares, unsigned &killer_sum, BitSet &found);
 
   bool dfs_traverse(const std::vector<ChainsGraph>& g, const std::function<bool
       (const std::vector<unsigned>&)> &cb, std::vector<unsigned> &path,
@@ -251,6 +279,11 @@ private:
   TestGetMappings(Sudoku &s);
 
   friend std::istream &operator>>(std::istream &s, Sudoku &puzzle);
+
+  friend void TestInjectKillerBlock(Sudoku &s, unsigned sum, const std::vector<unsigned>& offsets);
+  friend std::unordered_multimap<unsigned, unsigned>& TestGetContainedKillerBlocks(Sudoku &s) {
+      return s.contained_killer_blocks_;
+  }
 };
 } // namespace sudoku
 
