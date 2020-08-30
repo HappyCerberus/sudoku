@@ -50,7 +50,8 @@ The video & audio quality improves over time and I'm continually making improvem
 * [2020/08/16](https://www.youtube.com/watch?v=mmMSGK9da9o) Refactoring code for simplicity & C++20 Part 5
 * [2020/08/22](https://www.youtube.com/watch?v=UhhJV4TsJcw) Refactoring code for simplicity & C++20 Part 6
 * [2020/08/23](https://www.youtube.com/watch?v=qs7kNE5G6Ls) Refactoring code for simplicity & C++20 Part 7
-
+* [2020/08/29](https://www.youtube.com/watch?v=P2tKrxSYwLA) Compile time datastructure for Killer Sudoku support
+* [2020/08/30](https://www.youtube.com/watch?v=olakOvh8qgo) Initial Killer Sudoku support
 
 ## Current Benchmark results
 
