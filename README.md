@@ -1,5 +1,6 @@
 # Logic-based Sudoku Solver
 
+![sudoku](https://socialify.git.ci/HappyCerberus/sudoku/image?description=1&descriptionEditable=Sudoku%20solver%20that%20doesn%27t%20guess.&font=KoHo&forks=1&language=1&owner=1&pattern=Signal&stargazers=1&theme=Light)
 
 [![Build status](https://ci.appveyor.com/api/projects/status/elojn7ea90xhfy1i?svg=true)](https://ci.appveyor.com/project/HappyCerberus/sudoku/branch/master)
 [![Build Status](https://travis-ci.org/HappyCerberus/sudoku.svg?branch=master)](https://travis-ci.org/HappyCerberus/sudoku)
